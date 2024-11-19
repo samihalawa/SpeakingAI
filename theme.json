@@ -4,6 +4,7 @@
   "secondary": "#FF6B6B",
   "accent": "#FBE6C2",
   "background": "#FAFAFA",
+  "text": "#2D3748",
   "appearance": "light",
   "radius": 1.0
 }
