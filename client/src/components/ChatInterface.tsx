@@ -7,10 +7,15 @@ import { Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+interface DetectedVocabulary {
+  word: string;
+  translation: string;
+}
+
 interface Message {
   content: string;
   role: "user" | "assistant";
-  detectedVocabulary?: Array<{ word: string; translation: string }>;
+  detectedVocabulary: DetectedVocabulary[] | null;
 }
 
 export function ChatInterface() {

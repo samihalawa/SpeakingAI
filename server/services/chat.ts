@@ -35,7 +35,7 @@ export async function generateChatResponse(userMessage: string): Promise<{
 
     // Extract Spanish words for vocabulary detection
     const words = response.match(/\b\w+\b/g) || [];
-    const uniqueWords = [...new Set(words)];
+    const uniqueWords = Array.from(new Set(words));
 
     // Check against existing vocabulary using OR conditions
     const detectedVocabulary = await db
