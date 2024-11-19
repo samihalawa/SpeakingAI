@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { db } from "../db";
 import { vocabularyItems, chatMessages } from "@db/schema";
 import { eq } from "drizzle-orm";
+import { generateChatResponse } from "./services/chat";
 
 export function registerRoutes(app: Express) {
   // Vocabulary routes

@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { db } from '../../db';
 import { vocabularyItems } from '@db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -37,12 +37,12 @@ export async function generateChatResponse(userMessage: string): Promise<{
     const words = response.match(/\b\w+\b/g) || [];
     const uniqueWords = [...new Set(words)];
 
-    // Check against existing vocabulary
+    // Check against existing vocabulary using OR conditions
     const detectedVocabulary = await db
       .select()
       .from(vocabularyItems)
       .where(
-        uniqueWords.map(word => eq(vocabularyItems.spanish, word.toLowerCase()))
+        or(...uniqueWords.map(word => eq(vocabularyItems.spanish, word.toLowerCase())))
       );
 
     console.log('Chat response generated:', {
