@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 interface Message {
   content: string;
   role: "user" | "assistant";
+  detectedVocabulary?: Array<{ word: string; translation: string }>;
 }
 
 export function ChatInterface() {
@@ -68,7 +69,19 @@ export function ChatInterface() {
                 : "bg-[#FBD38D]"
             }`}
           >
-            {message.content}
+            <div className="space-y-2">
+              <p>{message.content}</p>
+              {message.role === "assistant" && message.detectedVocabulary?.length > 0 && (
+                <div className="text-sm mt-2 p-2 bg-accent/50 rounded">
+                  <p className="font-semibold mb-1">Vocabulary:</p>
+                  {message.detectedVocabulary.map(({ word, translation }) => (
+                    <p key={word} className="text-sm">
+                      {word} - {translation}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
           </Card>
         ))}
       </ScrollArea>
