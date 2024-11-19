@@ -36,22 +36,29 @@ export function registerRoutes(app: Express) {
   app.post("/api/chat/send", async (req, res) => {
     try {
       const { content } = req.body;
-      const [message] = await db
+      const [userMessage] = await db
         .insert(chatMessages)
         .values({ content, role: "user" })
         .returning();
 
-      // Simulate AI response
-      const [response] = await db
+      // Generate AI response with vocabulary detection
+      const { content: responseContent, detectedVocabulary } = await generateChatResponse(content);
+      
+      const [assistantMessage] = await db
         .insert(chatMessages)
         .values({
-          content: `Here's a simulated response to: ${content}`,
+          content: responseContent,
           role: "assistant",
         })
         .returning();
 
-      res.json({ message, response });
+      res.json({
+        message: userMessage,
+        response: assistantMessage,
+        detectedVocabulary,
+      });
     } catch (error) {
+      console.error("Chat error:", error);
       res.status(500).json({ error: "Failed to send message" });
     }
   });
