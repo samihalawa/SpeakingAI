@@ -97,7 +97,7 @@ export function VocabularyForm({ onSuccess }: VocabularyFormProps) {
             <FormItem>
               <FormLabel>Example Sentence</FormLabel>
               <FormControl>
-                <Textarea {...field} />
+                <Textarea {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>

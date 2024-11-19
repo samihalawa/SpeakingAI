@@ -86,15 +86,17 @@ export function filterVocabulary(filters: VocabularyFilters = {}) {
       let compareB = b[filters.sortBy!];
 
       if (filters.sortBy === 'lastReviewed') {
-        compareA = new Date(compareA as string).getTime();
-        compareB = new Date(compareB as string).getTime();
+        const timeA = new Date(compareA as string).getTime();
+        const timeB = new Date(compareB as string).getTime();
+        return filters.sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
       }
 
-      if (filters.sortOrder === 'desc') {
-        [compareA, compareB] = [compareB, compareA];
+      if (typeof compareA === 'string' && typeof compareB === 'string') {
+        const comparison = compareA.localeCompare(compareB);
+        return filters.sortOrder === 'desc' ? -comparison : comparison;
       }
 
-      return compareA < compareB ? -1 : compareA > compareB ? 1 : 0;
+      return 0;
     });
   }
 
