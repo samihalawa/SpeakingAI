@@ -9,6 +9,10 @@ const config: PlaywrightTestConfig = {
   use: {
     baseURL: 'http://localhost:5000',
     trace: 'on-first-retry',
+    headless: true,
+    launchOptions: {
+      args: ['--no-sandbox', '--disable-gpu']
+    }
   },
   webServer: {
     command: 'npm run dev',
