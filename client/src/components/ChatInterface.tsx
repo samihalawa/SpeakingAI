@@ -143,7 +143,7 @@ export function ChatInterface() {
               >
                 <div className={cn(
                   "px-4 py-2 rounded-lg",
-                  message.role === "user" ? "bg-[#1B4965] text-white" : "bg-[#FBD38D]"
+                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 )}>
                   <p>{message.content}</p>
                 </div>
