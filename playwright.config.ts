@@ -8,24 +8,33 @@ const config: PlaywrightTestConfig = {
   },
   use: {
     baseURL: 'http://localhost:5000',
-    trace: 'on-first-retry',
+    trace: 'on',
     headless: true,
-    channel: 'chromium',
+    viewport: { width: 1280, height: 720 },
     launchOptions: {
-      args: ['--no-sandbox', '--disable-gpu']
+      args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
     }
   },
   projects: [
     {
       name: 'chromium',
-      use: { browserName: 'chromium' },
-    },
+      use: {
+        browserName: 'chromium',
+      },
+    }
   ],
   webServer: {
     command: 'npm run dev',
     port: 5000,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
   },
+  reporter: [
+    ['list'],
+    ['json', { outputFile: 'test-results/test-results.json' }]
+  ],
+  workers: 1,
+  preserveOutput: 'failures-only',
+  outputDir: 'test-results'
 };
 
 export default config;
