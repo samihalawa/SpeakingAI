@@ -1,8 +1,10 @@
 import { IonContent, IonPage, IonSplitPane } from "@ionic/react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import { ChatInterface } from "./ChatInterface";
 import { VocabularyList } from "./VocabularyList";
+import { ErrorBoundary } from "./ui/ErrorBoundary";
 
 export function SplitLayout() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -20,10 +22,28 @@ export function SplitLayout() {
         <IonContent>
           <IonSplitPane contentId="main" when="md">
             <div className="w-1/2 h-full border-r">
-              <ChatInterface />
+              <ErrorBoundary
+                fallback={
+                  <div className="p-4">
+                    <h2 className="text-lg font-semibold mb-2">Chat Interface Error</h2>
+                    <p className="text-gray-600">There was an error loading the chat interface. Please try refreshing the page.</p>
+                  </div>
+                }
+              >
+                <ChatInterface />
+              </ErrorBoundary>
             </div>
             <div id="main" className="w-1/2 h-full">
-              <VocabularyList />
+              <ErrorBoundary
+                fallback={
+                  <div className="p-4">
+                    <h2 className="text-lg font-semibold mb-2">Vocabulary List Error</h2>
+                    <p className="text-gray-600">There was an error loading the vocabulary list. Please try refreshing the page.</p>
+                  </div>
+                }
+              >
+                <VocabularyList />
+              </ErrorBoundary>
             </div>
           </IonSplitPane>
         </IonContent>
@@ -35,23 +55,33 @@ export function SplitLayout() {
     <IonPage>
       <IonContent>
         <div className="h-full">
-          <div className="flex justify-center gap-4 p-4 bg-background border-b">
-            <button
-              className={`px-4 py-2 rounded-full transition-colors ${
-                activeView === "chat" ? "bg-primary text-white" : "bg-gray-100"
-              }`}
-              onClick={() => setActiveView("chat")}
+          <div className="flex justify-center p-4 bg-background border-b">
+            <ToggleGroup.Root
+              type="single"
+              value={activeView}
+              onValueChange={(value) => value && setActiveView(value as "chat" | "vocabulary")}
+              className="inline-flex bg-muted p-1 rounded-lg gap-1"
+              aria-label="View options"
             >
-              Chat
-            </button>
-            <button
-              className={`px-4 py-2 rounded-full transition-colors ${
-                activeView === "vocabulary" ? "bg-primary text-white" : "bg-gray-100"
-              }`}
-              onClick={() => setActiveView("vocabulary")}
-            >
-              Vocabulary
-            </button>
+              <ToggleGroup.Item
+                value="chat"
+                aria-label="Chat view"
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  activeView === "chat" ? "bg-primary text-primary-foreground" : "hover:bg-muted-foreground/10"
+                }`}
+              >
+                Chat
+              </ToggleGroup.Item>
+              <ToggleGroup.Item
+                value="vocabulary"
+                aria-label="Vocabulary view"
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  activeView === "vocabulary" ? "bg-primary text-primary-foreground" : "hover:bg-muted-foreground/10"
+                }`}
+              >
+                Vocabulary
+              </ToggleGroup.Item>
+            </ToggleGroup.Root>
           </div>
           <AnimatePresence mode="wait">
             <motion.div
@@ -62,7 +92,16 @@ export function SplitLayout() {
               transition={{ duration: 0.2 }}
               className="h-[calc(100%-4rem)]"
             >
-              {activeView === "chat" ? <ChatInterface /> : <VocabularyList />}
+              <ErrorBoundary
+                fallback={
+                  <div className="p-4">
+                    <h2 className="text-lg font-semibold mb-2">Component Error</h2>
+                    <p className="text-gray-600">There was an error loading the {activeView} view. Please try refreshing the page.</p>
+                  </div>
+                }
+              >
+                {activeView === "chat" ? <ChatInterface /> : <VocabularyList />}
+              </ErrorBoundary>
             </motion.div>
           </AnimatePresence>
         </div>
