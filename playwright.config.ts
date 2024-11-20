@@ -10,10 +10,17 @@ const config: PlaywrightTestConfig = {
     baseURL: 'http://localhost:5000',
     trace: 'on-first-retry',
     headless: true,
+    channel: 'chromium',
     launchOptions: {
       args: ['--no-sandbox', '--disable-gpu']
     }
   },
+  projects: [
+    {
+      name: 'chromium',
+      use: { browserName: 'chromium' },
+    },
+  ],
   webServer: {
     command: 'npm run dev',
     port: 5000,
