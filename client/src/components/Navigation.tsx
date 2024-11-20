@@ -87,7 +87,7 @@ export default function Navigation() {
     <header className="border-b bg-primary sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-primary-foreground hover:text-accent transition-colors hidden md:block">
+          <Link href="/" className="text-2xl font-bold transition-colors bg-gradient-to-r from-indigo-500 to-purple-600 text-transparent bg-clip-text hover:opacity-80">
             Kitty外语AI
           </Link>
           
