@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { sendWebSocketMessage } from "../lib/websocket";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,7 +12,10 @@ interface DetectedVocabulary {
   word: string;
   translation: string;
   type: string;
+  level: string;
   example: string;
+  context: string;
+  grammar_notes: string;
 }
 
 interface Message {
@@ -112,10 +116,17 @@ export function ChatInterface() {
                         <span className="mx-2">-</span>
                         <span>{vocab.translation}</span>
                         <div
-                          className="absolute hidden group-hover:block bg-white border p-2 rounded shadow-lg z-10 -top-2 left-full ml-2 w-64"
+                          className="absolute hidden group-hover:block bg-white border p-2 rounded shadow-lg z-10 -top-2 left-full ml-2 w-80"
                         >
-                          <p className="font-medium text-primary">{vocab.type}</p>
-                          <p className="text-sm mt-1">{vocab.example}</p>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <p className="font-medium text-primary">{vocab.type}</p>
+                              <span className="text-sm px-2 py-1 bg-accent rounded">{vocab.level}</span>
+                            </div>
+                            <p className="text-sm">{vocab.example}</p>
+                            <p className="text-sm text-gray-600">{vocab.context}</p>
+                            <p className="text-sm text-gray-600">{vocab.grammar_notes}</p>
+                          </div>
                         </div>
                       </div>
                       <Button
