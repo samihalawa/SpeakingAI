@@ -1,4 +1,7 @@
-[plugin:vite:react-babel] /home/runner/workspace/client/src/components/ChatInterface.tsx: Expected corresponding JSX closing tag for <div>. (217:28)
+import { Edit2, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";[plugin:vite:react-babel] /home/runner/workspace/client/src/components/ChatInterface.tsx: Expected corresponding JSX closing tag for <div>. (217:28)
   220 |                       ))}
 /home/runner/workspace/client/src/components/ChatInterface.tsx:217:28
 215|                                  )}
