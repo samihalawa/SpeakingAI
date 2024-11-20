@@ -45,7 +45,7 @@ export function VocabularyList() {
     },
   });
 
-  const filteredItems = filterVocabulary({
+  const filteredItems = filterVocabulary(vocabularyItems, {
     searchTerm,
     sortBy,
     sortOrder,

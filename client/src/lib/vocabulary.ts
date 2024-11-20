@@ -66,8 +66,8 @@ export async function fetchVocabulary() {
 }
 
 // Filtering and sorting functions
-export function filterVocabulary(filters: VocabularyFilters = {}) {
-  let filtered = [...vocabularyCache];
+export function filterVocabulary(items: Vocabulary[], filters: VocabularyFilters = {}) {
+  let filtered = [...items];
 
   // Apply search filter
   if (filters.searchTerm) {
