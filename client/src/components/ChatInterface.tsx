@@ -126,9 +126,9 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       <Card className="flex-1 flex flex-col overflow-hidden border-0 rounded-none bg-background">
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 px-4 py-6">
           <div className="space-y-4 max-w-2xl mx-auto">
             {messages.map((message) => (
               <motion.div
@@ -150,25 +150,24 @@ export function ChatInterface() {
                 {message.detectedVocabulary && <VocabularyCard message={message} />}
               </motion.div>
             ))}
+            <div ref={endRef} />
           </div>
         </ScrollArea>
-        
-        <Separator />
-        
-        <div className="p-4">
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <Input 
-              placeholder="输入消息..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="flex-1"
-            />
-            <Button type="submit" size="icon">
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
-        </div>
       </Card>
+      
+      <div className="sticky bottom-0 bg-background border-t">
+        <form onSubmit={handleSubmit} className="p-4 flex gap-2">
+          <Input 
+            placeholder="输入消息..."
+            value={input}
+            onChange={handleTyping}
+            className="flex-1"
+          />
+          <Button type="submit" size="icon" disabled={sendMessage.isPending}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
