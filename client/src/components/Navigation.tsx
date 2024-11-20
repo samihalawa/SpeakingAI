@@ -88,7 +88,7 @@ export default function Navigation() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <button onClick={() => window.location.href = "/"} className="text-2xl font-bold text-primary-foreground hover:text-accent transition-colors">
-            HablaFácil
+            Kitty外语AI
           </button>
           
           {isMobile ? (
