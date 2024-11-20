@@ -12,7 +12,7 @@ export function Layout() {
 
   return (
     <div className={cn(
-      "flex-1 grid overflow-hidden",
+      "flex-1 grid min-h-0 overflow-hidden",
       isDesktop ? "grid-cols-[1fr_400px]" : "grid-cols-1"
     )}>
       <ChatInterface />

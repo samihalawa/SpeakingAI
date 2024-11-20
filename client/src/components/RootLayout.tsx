@@ -12,7 +12,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
           "min-h-screen bg-background font-sans antialiased",
           "flex flex-col"
         )}>
-          <main className="flex-1 flex">{children}</main>
+          <main className="flex-1 flex min-h-0">{children}</main>
           <Toaster />
         </div>
       </QueryClientProvider>
