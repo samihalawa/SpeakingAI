@@ -25,6 +25,12 @@ export default {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
+        indigo: {
+          '500': '#6366f1',
+        },
+        purple: {
+          '600': '#9333ea',
+        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
