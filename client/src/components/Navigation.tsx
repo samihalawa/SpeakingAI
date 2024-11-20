@@ -87,7 +87,7 @@ export default function Navigation() {
     <header className="border-b bg-primary sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <button onClick={() => window.location.href = "/"} className="text-2xl font-bold text-primary-foreground hover:text-accent transition-colors">
+          <button onClick={() => window.location.href = "/"} className="text-2xl font-bold text-primary-foreground hover:text-accent transition-colors hidden md:block">
             Kitty外语AI
           </button>
           
