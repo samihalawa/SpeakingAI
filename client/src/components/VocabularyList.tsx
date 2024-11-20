@@ -22,15 +22,18 @@ export function VocabularyList() {
   });
 
   const sortedVocabulary = [...vocabulary].sort((a, b) => {
-    const dateA = new Date(a[sortBy]);
-    const dateB = new Date(b[sortBy]);
+    if (!a[sortBy] || !b[sortBy]) return 0;
+    const dateA = new Date(a[sortBy] || new Date());
+    const dateB = new Date(b[sortBy] || new Date());
     return sortOrder === 'desc' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
   });
 
-  const filteredVocabulary = sortedVocabulary.filter(item =>
-    item.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.translation.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredVocabulary = sortedVocabulary.filter(item => {
+    const word = item.word?.toLowerCase() || '';
+    const translation = item.translation?.toLowerCase() || '';
+    const searchTermLower = searchTerm.toLowerCase();
+    return word.includes(searchTermLower) || translation.includes(searchTermLower);
+  });
 
   return (
     <Card className="h-full flex flex-col overflow-hidden border-0 rounded-none">
