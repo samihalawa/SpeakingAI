@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { sendWebSocketMessage } from "../lib/websocket";
-import { Send, Plus, ChevronDown } from "lucide-react";
+import { Send, Plus, ChevronDown, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from 'react-markdown';
@@ -161,6 +161,7 @@ export function ChatInterface() {
             placeholder="输入消息..."
             value={input}
             onChange={handleTyping}
+            disabled={sendMessage.isPending}
             className="flex-1 min-w-0 h-10 sm:h-11"
           />
           <Button 
@@ -169,7 +170,11 @@ export function ChatInterface() {
             disabled={sendMessage.isPending}
             className="shrink-0 h-10 sm:h-11 w-10 sm:w-11"
           >
-            <Send className="h-4 w-4" />
+            {sendMessage.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </form>
       </div>

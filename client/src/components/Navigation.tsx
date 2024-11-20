@@ -52,10 +52,10 @@ export default function Navigation() {
       <Tooltip.Provider>
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <button className="flex items-center gap-2 text-primary-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-md" role="menuitem" onClick={() => window.location.href = "/"}>
+            <Link href="/" className="flex items-center gap-2 text-primary-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-md" role="menuitem">
               <MessageSquare className="h-5 w-5" aria-hidden="true" />
               <span>Chat</span>
-            </button>
+            </Link>
           </Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Content className="bg-gray-900 text-white px-2 py-1 rounded text-sm">
@@ -67,10 +67,10 @@ export default function Navigation() {
 
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <button className="flex items-center gap-2 text-primary-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-md" role="menuitem" onClick={() => window.location.href = "/vocabulary"}>
+            <Link href="/vocabulary" className="flex items-center gap-2 text-primary-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-md" role="menuitem">
               <BookOpen className="h-5 w-5" aria-hidden="true" />
               <span>Vocabulary</span>
-            </button>
+            </Link>
           </Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Content className="bg-gray-900 text-white px-2 py-1 rounded text-sm">
@@ -87,9 +87,9 @@ export default function Navigation() {
     <header className="border-b bg-primary sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <button onClick={() => window.location.href = "/"} className="text-2xl font-bold text-primary-foreground hover:text-accent transition-colors hidden md:block">
+          <Link href="/" className="text-2xl font-bold text-primary-foreground hover:text-accent transition-colors hidden md:block">
             Kitty外语AI
-          </button>
+          </Link>
           
           {isMobile ? (
             <DropdownMenu.Root>
@@ -108,16 +108,16 @@ export default function Navigation() {
                   sideOffset={5}
                 >
                   <DropdownMenu.Item className="p-2 outline-none cursor-pointer rounded hover:bg-gray-100">
-                    <button onClick={() => window.location.href = "/"} className="flex items-center gap-2 text-gray-700 w-full text-left">
+                    <Link href="/" className="flex items-center gap-2 text-gray-700 w-full text-left">
                       <MessageSquare className="h-5 w-5" />
                       Chat
-                    </button>
+                    </Link>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item className="p-2 outline-none cursor-pointer rounded hover:bg-gray-100">
-                    <button onClick={() => window.location.href = "/vocabulary"} className="flex items-center gap-2 text-gray-700 w-full text-left">
+                    <Link href="/vocabulary" className="flex items-center gap-2 text-gray-700 w-full text-left">
                       <BookOpen className="h-5 w-5" />
                       Vocabulary
-                    </button>
+                    </Link>
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
