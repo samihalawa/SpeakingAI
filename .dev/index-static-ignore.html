@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>LanguagAI - Plataforma de Aprendizaje de Español</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- DaisyUI Plugin -->
+  <script>
+    tailwind.config = {
+      plugins: [daisyui],
+      theme: {
+        extend: {
+          colors: {
+            terracotta: '#E2725B',
+            sunshine: '#FFD700',
+            mediterranean: '#1E90FF',
+            // Additional colors for dark mode
+            'dark-bg': '#1F2937',
+            'dark-text': '#F3F4F6',
+          },
+        },
+      },
+    };
+  </script>
+  <!-- DaisyUI CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet" type="text/css" />
+  <!-- Axios CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Tesseract.js for OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+</head>
+<body :class="{'bg-dark-bg text-dark-text': darkMode, 'bg-white text-gray-800': !darkMode}">
+  <div id="app" class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-terracotta p-4 text-white flex justify-between items-center">
+      <h1 class="text-2xl font-bold">LanguagAI Español</h1>
+      <button @click="toggleDarkMode" class="btn btn-circle btn-outline">
+        <svg v-if="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 3v1m0 16v1m8.66-9h-1M4.34 12h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M12 5a7 7 0 100 14 7 7 0 000-14z" />
+        </svg>
+        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor"
+             viewBox="0 0 20 20">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- Toast Notifications -->
+    <div class="fixed top-4 right-4 z-50">
+      <transition-group name="fade" tag="div">
+        <div v-for="toast in toasts" :key="toast.id" class="alert alert-info shadow-lg mb-2">
+          <div>
+            <span>{{ toast.message }}</span>
+          </div>
+          <button @click="removeToast(toast.id)" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar notificación">
+            ✕
+          </button>
+        </div>
+      </transition-group>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex flex-1">
+      <!-- Chat Section -->
+      <section class="w-full md:w-2/3 p-4 flex flex-col">
+        <div class="flex-1 overflow-y-auto mb-4" ref="chatContainer">
+          <div v-for="message in messages" :key="message.id" class="mb-2">
+            <div :class="{'text-right': message.sender === 'user', 'text-left': message.sender === 'ai'}">
+              <div :class="message.sender === 'user' ? 'bg-orange-200 dark:bg-orange-700' : 'bg-blue-200 dark:bg-blue-700'"
+                   class="inline-block p-2 rounded max-w-full break-words">
+                <p v-html="message.content"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Input -->
+        <div class="flex">
+          <input v-model="userInput" @keyup.enter="sendMessage" class="flex-1 p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="Escribe tu mensaje..." aria-label="Input de chat">
+          <button @click="sendMessage" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Enviar mensaje">
+            Enviar
+          </button>
+        </div>
+        <!-- Upload Buttons -->
+        <div class="mt-2 flex space-x-2">
+          <!-- Image Upload -->
+          <input type="file" @change="handleImageUpload" accept="image/*" class="hidden" ref="imageInput">
+          <button @click="$refs.imageInput.click()" class="btn btn-success" aria-label="Subir Imagen">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 5a2 2 0 012-2h3.586a2 2 0 011.414.586L12 7l1.586-1.414A2 2 0 0116.414 5H20a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" />
+            </svg>
+            Imagen
+          </button>
+          <!-- Audio Upload -->
+          <input type="file" @change="handleAudioUpload" accept="audio/*" class="hidden" ref="audioInput">
+          <button @click="$refs.audioInput.click()" class="btn btn-warning" aria-label="Subir Audio">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v4m0-4a3 3 0 100-6 3 3 0 000 6zm0 0v-3m0 3h.01M19.07 4.93a10 10 0 11-14.14 0 10 10 0 0114.14 0z" />
+            </svg>
+            Audio
+          </button>
+        </div>
+      </section>
+
+      <!-- Vocabulary Section -->
+      <aside class="hidden md:block w-1/3 p-4 bg-gray-100 dark:bg-gray-800 border-l overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4">Lista de Vocabulario</h2>
+        <!-- Search and Filters -->
+        <div class="mb-4">
+          <input v-model="searchQuery" class="input input-bordered w-full mb-2" placeholder="Buscar vocabulario..." aria-label="Buscar vocabulario">
+          <select v-model="filterType" class="select select-bordered w-full" aria-label="Filtrar por tipo">
+            <option value="">Todos los tipos</option>
+            <option value="word">Palabras</option>
+            <option value="idiom">Modismos</option>
+            <option value="expression">Expresiones</option>
+          </select>
+        </div>
+        <!-- Vocabulary List -->
+        <div>
+          <transition-group name="fade" tag="div">
+            <div v-for="word in filteredVocabulary" :key="word.id" class="mb-4 p-2 bg-white dark:bg-gray-700 rounded shadow">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg">{{ word.spanish }}</h3>
+                <div class="flex space-x-2">
+                  <button @click="copyToClipboard(word)" class="btn btn-xs btn-ghost" aria-label="Copiar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 8l6 6-6 6" />
+                    </svg>
+                  </button>
+                  <button @click="editVocabulary(word)" class="btn btn-xs btn-ghost" aria-label="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536M9.354 15.536L4.464 20.426a2 2 0 01-2.828-2.828L7.05 12.05a2 2 0 012.828 0l4.95 4.95a2 2 0 01-.001 2.828z" />
+                    </svg>
+                  </button>
+                  <button @click="deleteVocabulary(word.id)" class="btn btn-xs btn-ghost text-red-500" aria-label="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <p class="text-gray-600 dark:text-gray-300">{{ word.chinese }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Añadido: {{ word.timestamp }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Tipo: {{ capitalize(word.type) }}</p>
+              <ul class="list-disc ml-4 mt-2">
+                <li v-for="(example, index) in word.examples" :key="index">{{ example }}</li>
+              </ul>
+              <!-- Custom Tags -->
+              <div class="mt-2">
+                <span v-for="tag in word.tags" :key="tag" class="badge badge-primary mr-1">{{ tag }}</span>
+                <button @click="addTag(word)" class="btn btn-xs btn-outline ml-2" aria-label="Añadir etiqueta">+</button>
+              </div>
+            </div>
+          </transition-group>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Mobile Vocabulary Toggle -->
+    <button @click="toggleVocabulary" class="md:hidden fixed bottom-4 right-4 bg-blue-500 text-white p-4 rounded-full shadow-lg" aria-label="Abrir vocabulario">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+    <div v-if="showVocabulary" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div class="bg-white dark:bg-gray-800 w-11/12 h-3/4 p-4 rounded overflow-y-auto">
+        <button @click="toggleVocabulary" class="btn btn-circle btn-outline btn-error float-right" aria-label="Cerrar vocabulario">✕</button>
+        <h2 class="text-xl font-bold mb-4">Lista de Vocabulario</h2>
+        <!-- Search and Filters -->
+        <div class="mb-4">
+          <input v-model="searchQuery" class="input input-bordered w-full mb-2" placeholder="Buscar vocabulario..." aria-label="Buscar vocabulario">
+          <select v-model="filterType" class="select select-bordered w-full" aria-label="Filtrar por tipo">
+            <option value="">Todos los tipos</option>
+            <option value="word">Palabras</option>
+            <option value="idiom">Modismos</option>
+            <option value="expression">Expresiones</option>
+          </select>
+        </div>
+        <!-- Vocabulary List -->
+        <div>
+          <transition-group name="fade" tag="div">
+            <div v-for="word in filteredVocabulary" :key="word.id" class="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded shadow">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg">{{ word.spanish }}</h3>
+                <div class="flex space-x-2">
+                  <button @click="copyToClipboard(word)" class="btn btn-xs btn-ghost" aria-label="Copiar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 8l6 6-6 6" />
+                    </svg>
+                  </button>
+                  <button @click="editVocabulary(word)" class="btn btn-xs btn-ghost" aria-label="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536M9.354 15.536L4.464 20.426a2 2 0 01-2.828-2.828L7.05 12.05a2 2 0 012.828 0l4.95 4.95a2 2 0 01-.001 2.828z" />
+                    </svg>
+                  </button>
+                  <button @click="deleteVocabulary(word.id)" class="btn btn-xs btn-ghost text-red-500" aria-label="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <p class="text-gray-600 dark:text-gray-300">{{ word.chinese }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Añadido: {{ word.timestamp }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Tipo: {{ capitalize(word.type) }}</p>
+              <ul class="list-disc ml-4 mt-2">
+                <li v-for="(example, index) in word.examples" :key="index">{{ example }}</li>
+              </ul>
+              <!-- Custom Tags -->
+              <div class="mt-2">
+                <span v-for="tag in word.tags" :key="tag" class="badge badge-primary mr-1">{{ tag }}</span>
+                <button @click="addTag(word)" class="btn btn-xs btn-outline ml-2" aria-label="Añadir etiqueta">+</button>
+              </div>
+            </div>
+          </transition-group>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Edit Vocabulary Modal -->
+    <div v-if="editingVocabulary" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div class="bg-white dark:bg-gray-800 w-11/12 md:w-1/2 p-6 rounded shadow-lg">
+        <h3 class="text-lg font-bold mb-4">Editar Vocabulario</h3>
+        <form @submit.prevent="updateVocabulary">
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1" for="spanish">Palabra en Español</label>
+            <input type="text" id="spanish" v-model="editingVocabulary.spanish" class="input input-bordered w-full" required>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1" for="chinese">Traducción al Chino</label>
+            <input type="text" id="chinese" v-model="editingVocabulary.chinese" class="input input-bordered w-full" required>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1" for="examples">Ejemplos de Uso (separados por comas)</label>
+            <input type="text" id="examples" v-model="editingVocabulary.examplesText" class="input input-bordered w-full" required>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1" for="type">Tipo</label>
+            <select id="type" v-model="editingVocabulary.type" class="select select-bordered w-full" required>
+              <option value="word">Palabra</option>
+              <option value="idiom">Modismo</option>
+              <option value="expression">Expresión</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1" for="tags">Etiquetas Personalizadas (separadas por comas)</label>
+            <input type="text" id="tags" v-model="editingVocabulary.tagsText" class="input input-bordered w-full">
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button type="button" @click="cancelEdit" class="btn btn-ghost">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Tag Modal -->
+    <div v-if="addingTagVocabulary" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div class="bg-white dark:bg-gray-800 w-11/12 md:w-1/3 p-6 rounded shadow-lg">
+        <h3 class="text-lg font-bold mb-4">Añadir Etiqueta</h3>
+        <form @submit.prevent="addTagToVocabulary">
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1" for="newTag">Nueva Etiqueta</label>
+            <input type="text" id="newTag" v-model="newTag" class="input input-bordered w-full" required>
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button type="button" @click="cancelAddTag" class="btn btn-ghost">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Añadir</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-terracotta p-4 text-white text-center">
+      <p>&copy; 2024 LanguagAI Español</p>
+    </footer>
+  </div>
+
+  <!-- Vue.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <!-- Main Script -->
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        userInput: '',
+        messages: [],
+        vocabulary: [],
+        searchQuery: '',
+        filterType: '',
+        showVocabulary: false,
+        darkMode: false,
+        toasts: [],
+        editingVocabulary: null,
+        addingTagVocabulary: null,
+        newTag: '',
+      },
+      computed: {
+        filteredVocabulary() {
+          return this.vocabulary.filter(word => {
+            const matchesSearch = word.spanish.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                                  word.chinese.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                                  word.tags.some(tag => tag.toLowerCase().includes(this.searchQuery.toLowerCase()));
+            const matchesType = this.filterType ? word.type === this.filterType : true;
+            return matchesSearch && matchesType;
+          });
+        }
+      },
+      methods: {
+        capitalize(str) {
+          return str.charAt(0).toUpperCase() + str.slice(1);
+        },
+        async sendMessage() {
+          if (this.userInput.trim() === '') return;
+
+          // Add user message
+          this.messages.push({
+            id: Date.now(),
+            sender: 'user',
+            content: this.formatMessage(this.userInput, 'user')
+          });
+          const userMessage = this.userInput;
+          this.userInput = '';
+
+          // Scroll to bottom
+          this.$nextTick(() => {
+            this.scrollToBottom();
+          });
+
+          // Generate prompt based on message language
+          const prompt = this.generatePrompt(userMessage);
+
+          // Show loading toast
+          this.showToast('Procesando tu mensaje...', 'info');
+
+          // Call AI API
+          try {
+            const aiResponse = await this.getAIResponse(prompt);
+
+            // Remove loading toast
+            this.toasts = this.toasts.filter(toast => toast.id !== aiResponse.loadingId);
+
+            // Add AI message
+            this.messages.push({
+              id: Date.now(),
+              sender: 'ai',
+              content: this.formatMessage(aiResponse.responseText, 'ai')
+            });
+
+            // Update Vocabulary
+            if (aiResponse.vocabulary && aiResponse.vocabulary.length > 0) {
+              aiResponse.vocabulary.forEach(vocabItem => {
+                // Assign unique ID
+                vocabItem.id = Date.now() + Math.random();
+                // Initialize tags
+                vocabItem.tags = vocabItem.tags || [];
+                // Add to vocabulary list
+                this.vocabulary.push(vocabItem);
+              });
+            }
+
+            // Scroll to bottom
+            this.$nextTick(() => {
+              this.scrollToBottom();
+            });
+
+            // Show success toast
+            this.showToast('Mensaje procesado correctamente.', 'success');
+          } catch (error) {
+            console.error(error);
+            // Remove loading toast
+            this.toasts = this.toasts.filter(toast => toast.id !== aiResponse.loadingId);
+
+            // Add error message
+            this.messages.push({
+              id: Date.now(),
+              sender: 'ai',
+              content: '<p>Error al obtener la respuesta del AI. Por favor, intenta nuevamente.</p>'
+            });
+
+            // Show error toast
+            this.showToast('Error al procesar tu mensaje.', 'error');
+          }
+        },
+        generatePrompt(message) {
+          // Enhanced language detection using regex patterns
+          const chinesePattern = /[\u4e00-\u9fff]/;
+          const isChinese = chinesePattern.test(message);
+          if (isChinese) {
+            return `Traduce el siguiente texto al español y resalta el vocabulario clave difícil para un estudiante de nivel B2, incluyendo explicaciones. Responde en formato JSON siguiendo el esquema: { "spanish_translation": "traducción completa", "vocabulary_explanation": [ { "spanish": "palabra en español", "chinese": "traducción al chino", "timestamp": "fecha y hora", "examples": ["ejemplo 1", "ejemplo 2"], "type": "word/idiom/expression" }, ... ] }. Texto: "${message}"`;
+          } else {
+            return `Traduce el siguiente texto al chino y proporciona una explicación detallada de las palabras difíciles, modismos y matices culturales para un estudiante de nivel B2. Responde en formato JSON siguiendo el esquema: { "chinese_translation": "traducción completa", "vocabulary_explanation": [ { "spanish": "palabra en español", "chinese": "traducción al chino", "timestamp": "fecha y hora", "examples": ["ejemplo 1", "ejemplo 2"], "type": "word/idiom/expression" }, ... ] }. Texto: "${message}"`;
+          }
+        },
+        async getAIResponse(prompt) {
+          const loadingId = Date.now() + Math.random();
+          // Show loading toast
+          this.showToast('Esperando respuesta del AI...', 'info', loadingId);
+
+          const response = await axios.post(
+            'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct',
+            {
+              inputs: prompt,
+              options: { wait_for_model: true }
+            },
+            {
+              headers: {
+                Authorization: `Bearer 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`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+
+          if (response.status !== 200) {
+            throw new Error(`AI API error: ${response.statusText}`);
+          }
+
+          const responseData = response.data;
+
+          // Extract generated text
+          const responseText = responseData.generated_text || responseData[0].generated_text;
+
+          // Parse JSON from AI response
+          let parsedResponse;
+          try {
+            parsedResponse = JSON.parse(responseText);
+          } catch (error) {
+            console.error('Error parsing AI response as JSON:', error);
+            throw new Error('Formato de respuesta inválido del AI.');
+          }
+
+          // Validate schema
+          if ((!parsedResponse.chinese_translation && !parsedResponse.spanish_translation) ||
+              !parsedResponse.vocabulary_explanation) {
+            throw new Error('Respuesta del AI no contiene los campos necesarios.');
+          }
+
+          // Extract vocabulary entries
+          let vocabularyEntries = [];
+          if (Array.isArray(parsedResponse.vocabulary_explanation)) {
+            vocabularyEntries = parsedResponse.vocabulary_explanation.map(vocab => ({
+              spanish: vocab.spanish,
+              chinese: vocab.chinese,
+              timestamp: vocab.timestamp || new Date().toLocaleString(),
+              examples: vocab.examples || [],
+              type: vocab.type || 'word',
+              tags: vocab.tags || []
+            }));
+          } else if (typeof parsedResponse.vocabulary_explanation === 'object') {
+            vocabularyEntries.push({
+              spanish: parsedResponse.vocabulary_explanation.spanish,
+              chinese: parsedResponse.vocabulary_explanation.chinese,
+              timestamp: parsedResponse.vocabulary_explanation.timestamp || new Date().toLocaleString(),
+              examples: parsedResponse.vocabulary_explanation.examples || [],
+              type: parsedResponse.vocabulary_explanation.type || 'word',
+              tags: parsedResponse.vocabulary_explanation.tags || []
+            });
+          }
+
+          return {
+            responseText: parsedResponse.chinese_translation || parsedResponse.spanish_translation,
+            vocabulary: vocabularyEntries,
+            loadingId: loadingId
+          };
+        },
+        extractVocabularyFromResponse(responseData) {
+          // Already handled in getAIResponse
+          return responseData.vocabulary;
+        },
+        formatMessage(content, sender) {
+          // Format message content with highlighted vocabulary if AI
+          if (sender === 'ai') {
+            // Display the translation directly
+            return content;
+          }
+          return content;
+        },
+        handleImageUpload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          // Validate file type
+          if (!file.type.startsWith('image/')) {
+            this.showToast('Por favor, sube un archivo de imagen válido.', 'error');
+            return;
+          }
+
+          // Add loading toast
+          this.showToast('Procesando imagen...', 'info');
+
+          // Perform OCR using Tesseract.js
+          Tesseract.recognize(
+            file,
+            'spa',
+            { logger: m => console.log(m) }
+          ).then(({ data: { text } }) => {
+            // Remove loading toast
+            this.removeLastToast();
+
+            // Set extracted text as user input and send it
+            this.userInput = text.trim();
+            this.sendMessage();
+          }).catch(error => {
+            console.error(error);
+            this.removeLastToast();
+            this.showToast('Error al procesar la imagen. Por favor, intenta nuevamente.', 'error');
+          });
+        },
+        async handleAudioUpload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          // Validate file type
+          if (!file.type.startsWith('audio/')) {
+            this.showToast('Por favor, sube un archivo de audio válido.', 'error');
+            return;
+          }
+
+          // Add loading toast
+          this.showToast('Transcribiendo audio...', 'info');
+
+          try {
+            // Convert audio file to base64
+            const base64Audio = await this.convertToBase64(file);
+            const base64Data = base64Audio.split(',')[1];
+
+            // Call Hugging Face Whisper model for transcription
+            const transcriptionResponse = await axios.post(
+              'https://api-inference.huggingface.co/models/openai/whisper-base',
+              {
+                inputs: base64Data,
+                options: { wait_for_model: true }
+              },
+              {
+                headers: {
+                  Authorization: `Bearer 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`,
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+
+            if (transcriptionResponse.status !== 200) {
+              throw new Error(`Transcription API error: ${transcriptionResponse.statusText}`);
+            }
+
+            const transcriptionText = transcriptionResponse.data.text;
+
+            // Remove loading toast
+            this.removeLastToast();
+
+            if (!transcriptionText) {
+              throw new Error('No se pudo transcribir el audio.');
+            }
+
+            // Set transcribed text as user input and send it
+            this.userInput = transcriptionText.trim();
+            this.sendMessage();
+
+          } catch (error) {
+            console.error(error);
+            this.removeLastToast();
+            this.showToast('Error al transcribir el audio. Por favor, intenta nuevamente.', 'error');
+          }
+        },
+        convertToBase64(file) {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+          });
+        },
+        toggleVocabulary() {
+          this.showVocabulary = !this.showVocabulary;
+        },
+        scrollToBottom() {
+          const container = this.$refs.chatContainer;
+          container.scrollTop = container.scrollHeight;
+        },
+        showToast(message, type = 'info', id = null) {
+          const toastId = id || Date.now() + Math.random();
+          this.toasts.push({ id: toastId, message, type });
+          // Auto-remove toast after 5 seconds
+          setTimeout(() => {
+            this.toasts = this.toasts.filter(toast => toast.id !== toastId);
+          }, 5000);
+        },
+        removeToast(id) {
+          this.toasts = this.toasts.filter(toast => toast.id !== id);
+        },
+        removeLastToast() {
+          this.toasts.pop();
+        },
+        copyToClipboard(word) {
+          const textToCopy = `Palabra: ${word.spanish}\nTraducción: ${word.chinese}\nTipo: ${this.capitalize(word.type)}\nEjemplos:\n1. ${word.examples[0]}\n2. ${word.examples[1]}`;
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            this.showToast('Vocabulario copiado al portapapeles.', 'success');
+          }).catch(err => {
+            console.error('Error al copiar al portapapeles:', err);
+            this.showToast('Error al copiar al portapapeles.', 'error');
+          });
+        },
+        editVocabulary(word) {
+          // Initialize editingVocabulary with current word data
+          this.editingVocabulary = { ...word, examplesText: word.examples.join(', '), tagsText: word.tags.join(', ') };
+        },
+        updateVocabulary() {
+          if (!this.editingVocabulary) return;
+
+          // Find the index of the vocabulary to update
+          const index = this.vocabulary.findIndex(vocab => vocab.id === this.editingVocabulary.id);
+          if (index !== -1) {
+            // Update the vocabulary entry
+            this.vocabulary[index].spanish = this.editingVocabulary.spanish;
+            this.vocabulary[index].chinese = this.editingVocabulary.chinese;
+            this.vocabulary[index].examples = this.editingVocabulary.examplesText.split(',').map(ex => ex.trim());
+            this.vocabulary[index].type = this.editingVocabulary.type;
+            this.vocabulary[index].tags = this.editingVocabulary.tagsText ? this.editingVocabulary.tagsText.split(',').map(tag => tag.trim()) : [];
+            // Save to localStorage
+            this.saveVocabulary();
+            // Show success toast
+            this.showToast('Vocabulario actualizado correctamente.', 'success');
+          }
+
+          // Clear editingVocabulary
+          this.editingVocabulary = null;
+        },
+        cancelEdit() {
+          this.editingVocabulary = null;
+        },
+        deleteVocabulary(id) {
+          if (confirm('¿Estás seguro de que deseas eliminar este vocabulario?')) {
+            this.vocabulary = this.vocabulary.filter(vocab => vocab.id !== id);
+            // Save to localStorage
+            this.saveVocabulary();
+            // Show success toast
+            this.showToast('Vocabulario eliminado correctamente.', 'success');
+          }
+        },
+        addTag(word) {
+          this.addingTagVocabulary = word;
+          this.newTag = '';
+        },
+        addTagToVocabulary() {
+          if (!this.addingTagVocabulary || !this.newTag.trim()) return;
+
+          const index = this.vocabulary.findIndex(vocab => vocab.id === this.addingTagVocabulary.id);
+          if (index !== -1) {
+            if (!this.vocabulary[index].tags.includes(this.newTag.trim())) {
+              this.vocabulary[index].tags.push(this.newTag.trim());
+              // Save to localStorage
+              this.saveVocabulary();
+              // Show success toast
+              this.showToast('Etiqueta añadida correctamente.', 'success');
+            } else {
+              this.showToast('Esta etiqueta ya existe.', 'error');
+            }
+          }
+
+          // Clear addingTagVocabulary
+          this.addingTagVocabulary = null;
+          this.newTag = '';
+        },
+        cancelAddTag() {
+          this.addingTagVocabulary = null;
+          this.newTag = '';
+        },
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          // Persist dark mode preference
+          localStorage.setItem('darkMode', this.darkMode);
+        },
+        loadDarkMode() {
+          const savedMode = localStorage.getItem('darkMode');
+          if (savedMode !== null) {
+            this.darkMode = JSON.parse(savedMode);
+          }
+        },
+        saveVocabulary() {
+          localStorage.setItem('vocabulary', JSON.stringify(this.vocabulary));
+        },
+        loadVocabulary() {
+          const savedVocab = localStorage.getItem('vocabulary');
+          if (savedVocab) {
+            this.vocabulary = JSON.parse(savedVocab);
+          }
+        }
+      },
+      created() {
+        // Load vocabulary from localStorage
+        this.loadVocabulary();
+        // Load dark mode preference
+        this.loadDarkMode();
+      }
+    });
+  </script>
+  <!-- Custom Styles -->
+  <style>
+    .fade-enter-active, .fade-leave-active {
+      transition: all 0.5s;
+    }
+    .fade-enter, .fade-leave-to {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    /* Responsive Adjustments */
+    @media (max-width: 767px) {
+      aside {
+        display: none;
+      }
+    }
+  </style>
+</body>
+</html>
