@@ -85,9 +85,9 @@ export async function generateChatResponse(userMessage: string): Promise<{
     } catch (error) {
       console.error('Failed to parse JSON response:', error);
       response = {
-        type: 'conversation',
-        spanish: responseText,
-        chinese: '抱歉，我理解有误。',
+        input_language: 'chinese',
+        translation: responseText,
+        explanation: '抱歉，我理解有误。',
         vocabulary: []
       };
     }
@@ -108,9 +108,8 @@ export async function generateChatResponse(userMessage: string): Promise<{
     // Enhanced logging for debugging
     console.log('Chat processing:', {
       inputLength: userMessage.length,
-      responseType: response.type,
-      messageLength: response.spanish.length,
-      hasChineseTranslation: !!response.chinese,
+      inputLanguage: response.input_language,
+      translationLength: response.translation.length,
       hasExplanation: !!response.explanation,
       totalVocabularyDetected: response.vocabulary.length,
       newVocabularyCount: newVocabulary.length,
