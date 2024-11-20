@@ -7,67 +7,57 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are an advanced Spanish language tutor specializing in B2 level instruction. Analyze the context of each user message to provide responses in Spanish with Chinese translations.
+const SYSTEM_PROMPT = `You are an advanced Spanish language tutor for Chinese speakers at B2 level. Detect the input language and respond accordingly:
 
-Respond in JSON format with the following structure:
+For Chinese input:
+- Translate to natural Spanish
+- Highlight B2+ level vocabulary in the translation
+- Explain in Chinese why certain phrases might be challenging
+- Provide example sentences for complex terms
+
+For Spanish input:
+- Provide accurate Chinese translation
+- Identify and explain B2+ level vocabulary
+- Include colloquial/formal usage notes in Chinese
+- Give example sentences with Chinese translations
+
+Respond in JSON format:
 {
-  "type": "translation" | "explanation" | "conversation",
-  "spanish": "Spanish response text",
-  "chinese": "Chinese translation of the response",
-  "explanation": "Grammatical or cultural explanation in Chinese",
+  "input_language": "chinese" | "spanish",
+  "translation": "Translation in target language",
+  "explanation": "Explanation in Chinese about translation choices",
   "vocabulary": [
     {
-      "word": "Spanish word or phrase",
+      "word": "Spanish word/phrase",
       "translation": "Chinese translation",
-      "colloquial": boolean,
-      "colloquial_indicator": "口语 (if applicable)",
-      "type": "noun/verb/adjective/phrase",
-      "level": "A1/A2/B1/B2/C1",
+      "level": "B1/B2/C1",
+      "usage_type": "formal/colloquial/idiomatic",
+      "explanation": "Detailed explanation in Chinese",
       "example": "Example sentence in Spanish",
       "example_translation": "Example translation in Chinese",
-      "context": "Cultural or usage context in Chinese",
       "grammar_notes": "Grammar explanations in Chinese"
     }
   ]
 }
 
-For translation requests: 
-- Provide natural Chinese translations
-- Mark colloquial expressions with 口语
-- Include usage context in Chinese
-
-For questions: 
-- Give detailed explanations in Chinese
-- Provide relevant examples with translations
-
-For conversation: 
-- Maintain natural flow while explaining idioms
-- Highlight colloquial usage with 口语 marker
-
-Always provide:
-1. Complete Chinese translations
-2. Clear marking of informal/colloquial terms (口语)
-3. Cultural context in Chinese
-4. Grammar explanations in Chinese`;
+Focus on vocabulary and expressions that B2 learners typically struggle with.
+Always explain in Chinese why certain expressions are challenging.`;
 
 interface VocabularyItem {
   word: string;
   translation: string;
-  colloquial: boolean;
-  colloquial_indicator?: string;
-  type: string;
   level: string;
+  usage_type: 'formal' | 'colloquial' | 'idiomatic';
+  explanation: string;
   example: string;
   example_translation: string;
-  context: string;
   grammar_notes: string;
 }
 
 interface ChatResponse {
-  type: 'translation' | 'explanation' | 'conversation';
-  spanish: string;
-  chinese: string;
-  explanation?: string;
+  input_language: 'chinese' | 'spanish';
+  translation: string;
+  explanation: string;
   vocabulary: VocabularyItem[];
 }
 
@@ -115,18 +105,24 @@ export async function generateChatResponse(userMessage: string): Promise<{
     // Filter out existing vocabulary
     const newVocabulary = response.vocabulary.filter(v => !existingWords.has(v.word.toLowerCase()));
 
-    console.log('Chat response generated:', {
+    // Enhanced logging for debugging
+    console.log('Chat processing:', {
+      inputLength: userMessage.length,
+      responseType: response.type,
       messageLength: response.spanish.length,
-      detectedVocabularyCount: newVocabulary.length,
+      hasChineseTranslation: !!response.chinese,
+      hasExplanation: !!response.explanation,
+      totalVocabularyDetected: response.vocabulary.length,
+      newVocabularyCount: newVocabulary.length,
+      existingVocabularyCount: response.vocabulary.length - newVocabulary.length,
     });
 
-    // Construct the display content
-    let content = response.spanish;
+    // Construct the display content with Chinese translation
+    let content = response.translation;
     
-    if (response.type === 'translation' && response.english) {
-      content = `${response.spanish}\n\n${response.english}`;
-    } else if (response.type === 'explanation' && response.explanation) {
-      content = `${response.spanish}\n\n${response.explanation}`;
+    // Add explanation after translation
+    if (response.explanation) {
+      content += `\n\n${response.explanation}`;
     }
 
     return {
