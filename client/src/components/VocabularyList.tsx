@@ -19,9 +19,15 @@ interface VocabularyItem {
   id: string;
   spanish: string;
   chinese: string;
-  type?: string;
-  example?: string;
-  notes?: string;
+  wordType: string;
+  example: string | null;
+  notes: string | null;
+  tags: string | null;
+  theme: string | null;
+  difficulty: string;
+  lastReviewed: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export function VocabularyList() {
@@ -43,6 +49,15 @@ export function VocabularyList() {
     searchTerm,
     sortBy,
     sortOrder,
+  });
+  
+  console.log('Filtered vocabulary items:', {
+    total: vocabularyItems.length,
+    filtered: filteredItems.length,
+    searchTerm,
+    sortBy,
+    sortOrder,
+    sample: filteredItems.slice(0, 2)
   });
 
   const handleDelete = async (id: string) => {
@@ -89,7 +104,7 @@ export function VocabularyList() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge>{item.type}</Badge>
+                        <Badge>{item.wordType}</Badge>
                         <div className="flex items-center gap-1">
                           <Button
                             variant="ghost"
