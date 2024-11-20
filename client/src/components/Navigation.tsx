@@ -1,7 +1,42 @@
+/**
+ * Navigation Component
+ * 
+ * A responsive navigation bar component that adapts to both desktop and mobile views.
+ * Uses Radix UI's DropdownMenu for accessible mobile navigation.
+ * 
+ * Features:
+ * - Responsive design with mobile-first approach
+ * - Accessible keyboard navigation
+ * - Animated transitions
+ * - ARIA-compliant markup
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * // Basic usage
+ * import Navigation from './Navigation';
+ * 
+ * function App() {
+ *   return <Navigation />;
+ * }
+ * 
+ * // The component will automatically handle responsive behavior
+ * ```
+ */
+
 import { Link } from "wouter";
 import { BookOpen, MessageSquare, Menu } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
+
+const menuAnimation = {
+  initial: { opacity: 0, y: -10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+  transition: { duration: 0.2 }
+};
 
 export default function Navigation() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -14,18 +49,41 @@ export default function Navigation() {
 
   const NavLinks = () => (
     <>
-      <Link href="/">
-        <a className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors">
-          <MessageSquare className="h-5 w-5" />
-          <span>Chat</span>
-        </a>
-      </Link>
-      <Link href="/vocabulary">
-        <a className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors">
-          <BookOpen className="h-5 w-5" />
-          <span>Vocabulary</span>
-        </a>
-      </Link>
+      <Tooltip.Provider>
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <Link href="/">
+              <a className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F2CC8F] rounded-md" role="menuitem">
+                <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                <span>Chat</span>
+              </a>
+            </Link>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content className="bg-gray-900 text-white px-2 py-1 rounded text-sm">
+              Practice Spanish conversation
+              <Tooltip.Arrow className="fill-gray-900" />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <Link href="/vocabulary">
+              <a className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F2CC8F] rounded-md" role="menuitem">
+                <BookOpen className="h-5 w-5" aria-hidden="true" />
+                <span>Vocabulary</span>
+              </a>
+            </Link>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content className="bg-gray-900 text-white px-2 py-1 rounded text-sm">
+              Manage your vocabulary list
+              <Tooltip.Arrow className="fill-gray-900" />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>
     </>
   );
 
