@@ -404,7 +404,7 @@ I'll enhance the chat interface to show vocabulary items with animations and pro
 so if i send
 hola kitty. era para decirte un poco del problem'on que tengo encima
 
-it shoudl reply
+it shoudl reply something like
 
 Hello Kitty。我想告诉你一些关于我身上的问题
 
@@ -521,7 +521,7 @@ AI
 Please send the message '我非常想学西班牙语' and verify: 1. Are there any B2/CEFR level mentions in the response? 2. Are all explanations in Chinese? 3. Is vocabulary being automatically added and showing notifications?
 
 2 hours ago
-nope. it needs refreshing for it to show up, and it should be more compact and optmiiced UI and much more modern . it should look good even if many words and expressions are in the list. and allow easyli to filter by time or in groups of words (which can be grouped semantically in groups of words by tematic, or in kind of words like words, idioms, etc (use tags maybe will be better) . but enahnce mcuh more the UI, use some framework like redix UI componenets or any other very mdoern feleing framework that will feel the app be very native in comptuter or smaprtphone. use a library of rpebuitl componeents for maximum abstraciton
+nope. it is not working.it needs refreshing for it to show up, and it should be more compact and optmiiced UI and much more modern . it should look good even if many words and expressions are in the list. and allow easyli to filter by time or in groups of words (which can be grouped semantically in groups of words by tematic, or in kind of words like words, idioms, etc (use tags maybe will be better) . but enahnce mcuh more the UI, use some framework like redix UI componenets or any other very mdoern feleing framework that will feel the app be very native in comptuter or smaprtphone. use a library of rpebuitl componeents for maximum abstraciton
 
 2 hours ago
 •

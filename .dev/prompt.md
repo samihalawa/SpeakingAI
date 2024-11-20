@@ -6,7 +6,7 @@ ACCESS & TOOLS: [Previous access levels remain]
 CORE USER WORKFLOWS MUST SUPPORT:
 
 1. Chat & Translation:
-   "User opens app → starts typing Chinese → sees suggestions → gets real-time Spanish → vocabulary highlights → grammar notes appear in sidebar → all synchronized"
+   "User opens app → starts chatting in Chinese → sees suggestions → gets real-time Spanish → vocabulary highlights → grammar notes appear in sidebar → all synchronized"
 
 2. Vocabulary Management:
    "User hovers highlighted word → tooltip shows details → clicks '+' → card slides into vocabulary list with animation → toast confirms → list reorders"
