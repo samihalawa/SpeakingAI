@@ -1,16 +1,12 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Edit2, Trash2 } from "lucide-react";
+import { VocabularyItem } from "@/types/chat";
 import { motion } from "framer-motion";
-import { VocabularyItem } from "@/types/vocabulary";
 
-interface Props {
+interface VocabularyDialogProps {
   vocab: VocabularyItem;
   isOpen: boolean;
   onClose: () => void;
@@ -18,7 +14,7 @@ interface Props {
   onDelete?: () => void;
 }
 
-export function VocabularyDialog({ vocab, isOpen, onClose, onEdit, onDelete }: Props) {
+export function VocabularyDialog({ vocab, isOpen, onClose, onEdit, onDelete }: VocabularyDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -56,41 +52,44 @@ export function VocabularyDialog({ vocab, isOpen, onClose, onEdit, onDelete }: P
           className="space-y-6 py-4"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
         >
           {/* Translation */}
           <div className="space-y-2">
-            <h4 className="font-medium">Translation</h4>
-            <p className="text-muted-foreground">{vocab.translation}</p>
+            <Label className="text-primary">Translation</Label>
+            <p className="text-lg">{vocab.translation}</p>
           </div>
-
+          
           {/* Example */}
           {vocab.example && (
             <div className="space-y-2">
-              <h4 className="font-medium">Example</h4>
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <p>{vocab.example}</p>
-                {vocab.example_translation && (
-                  <p className="text-muted-foreground">{vocab.example_translation}</p>
-                )}
+              <Label className="text-primary">Example</Label>
+              <div className="bg-accent/50 p-4 rounded-md space-y-2">
+                <p className="text-base">{vocab.example}</p>
+                <p className="text-sm text-muted-foreground">{vocab.example_translation}</p>
               </div>
             </div>
           )}
-
+          
           {/* Grammar Notes */}
           {vocab.grammar_notes && (
             <div className="space-y-2">
-              <h4 className="font-medium">Grammar Notes</h4>
-              <div className="bg-blue-50 text-blue-900 p-4 rounded-lg">
-                <p>{vocab.grammar_notes}</p>
+              <Label className="text-blue-600">Grammar Notes</Label>
+              <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-md">
+                <p className="text-sm whitespace-pre-wrap">{vocab.grammar_notes}</p>
               </div>
             </div>
           )}
 
-          {/* Metadata */}
-          <div className="pt-4 border-t text-sm text-muted-foreground">
-            <p>Last reviewed: {new Date(vocab.lastReviewed).toLocaleDateString()}</p>
-            <p>Added: {new Date(vocab.createdAt).toLocaleDateString()}</p>
-          </div>
+          {/* Explanation */}
+          {vocab.explanation && (
+            <div className="space-y-2">
+              <Label className="text-emerald-600">Usage Notes</Label>
+              <div className="bg-emerald-50 dark:bg-emerald-950/50 p-4 rounded-md">
+                <p className="text-sm whitespace-pre-wrap">{vocab.explanation}</p>
+              </div>
+            </div>
+          )}
         </motion.div>
       </DialogContent>
     </Dialog>
