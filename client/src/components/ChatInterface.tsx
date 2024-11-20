@@ -155,7 +155,7 @@ export function ChatInterface() {
         </ScrollArea>
       </Card>
       
-      <div className="fixed bottom-0 left-0 right-0 w-full bg-background/80 backdrop-blur-sm border-t border-border z-[100] shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 w-full bg-background/80 backdrop-blur-sm border-t border-border z-[9999] shadow-lg">
         <form onSubmit={handleSubmit} className="px-4 py-4 sm:py-5 flex gap-3 max-w-2xl mx-auto items-center">
           <Input 
             placeholder="输入消息..."
