@@ -8,8 +8,13 @@ export const vocabularyItems = pgTable("vocabulary_items", {
   chinese: text("chinese").notNull(),
   example: text("example"),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  lastReviewed: timestamp("last_reviewed").defaultNow().notNull()
+  wordType: text("word_type").notNull().default('noun'),
+  tags: text("tags").array(),
+  theme: text("theme"),
+  difficulty: text("difficulty").notNull().default('beginner'),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  lastReviewed: timestamp("last_reviewed", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
 
 export const chatMessages = pgTable("chat_messages", {
