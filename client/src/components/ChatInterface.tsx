@@ -26,13 +26,14 @@ interface DetectedVocabulary {
 
 interface Message {
   id: string;
-  content: string;
   role: "user" | "assistant";
-  detectedVocabulary: DetectedVocabulary[] | null;
-  explanation?: string;
-  timestamp?: string;
-  input_language?: "chinese" | "spanish";
+  content: string;
   translation?: string;
+  explanation?: string;
+  detectedVocabulary?: DetectedVocabulary[];
+  examples?: string[];
+  input_language?: "chinese" | "spanish";
+  timestamp?: string;
 }
 
 // Logging utility
@@ -137,36 +138,34 @@ export function ChatInterface() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 className={cn(
-                  "flex flex-col gap-3 relative",
-                  message.role === "user" ? "justify-end items-end" : "justify-start items-start"
+                  "flex flex-col gap-3 relative w-full max-w-3xl mx-auto",
+                  message.role === "user" ? "items-end" : "items-start"
                 )}
               >
                 <Card className={cn(
                   "w-full",
-                  message.role === "user" ? "bg-primary/10" : "bg-accent/50"
+                  message.role === "user" ? "bg-primary/10" : "bg-accent"
                 )}>
                   <div className="p-4 space-y-4">
                     {/* Original Message */}
                     <div className="flex items-start gap-2">
-                      <MessageCircle className="h-5 w-5 mt-1 shrink-0 text-primary" />
-                      <p className="text-lg font-medium">
-                        {message.role === "user" ? message.content : message.translation}
-                      </p>
+                      <MessageCircle className="h-5 w-5 mt-1 shrink-0" />
+                      <p className="text-lg font-medium">{message.content}</p>
                     </div>
-
-                    {/* Translation if exists and is assistant message */}
-                    {message.role === "assistant" && message.content && (
+                    
+                    {/* Translation if exists */}
+                    {message.translation && (
                       <div className="flex items-start gap-2 pl-7">
                         <Languages className="h-5 w-5 mt-1 shrink-0 text-blue-500" />
-                        <p className="text-base text-muted-foreground">{message.content}</p>
+                        <p className="text-base text-muted-foreground">{message.translation}</p>
                       </div>
                     )}
-
+                    
                     {/* Explanation if exists */}
                     {message.explanation && (
                       <div className="flex items-start gap-2 pl-7 bg-accent/50 p-3 rounded-md">
                         <BookOpen className="h-5 w-5 mt-1 shrink-0 text-emerald-500" />
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                           {message.explanation}
                         </p>
                       </div>
@@ -177,11 +176,18 @@ export function ChatInterface() {
                       <div className="pl-7 mt-4 space-y-3">
                         <div className="flex items-center gap-2">
                           <Book className="h-5 w-5 text-amber-500" />
-                          <p className="text-sm font-medium">检测到的词汇:</p>
+                          <p className="text-sm font-medium">Vocabulary:</p>
                         </div>
                         <div className="grid gap-2">
                           {message.detectedVocabulary.map((vocab, idx) => (
-                            <VocabularyCard key={`${vocab.word}-${idx}`} message={{ detectedVocabulary: [vocab] }} />
+                            <VocabularyCard
+                              key={`${vocab.word}-${idx}`}
+                              message={{
+                                content: "",
+                                role: "assistant",
+                                detectedVocabulary: [vocab]
+                              }}
+                            />
                           ))}
                         </div>
                       </div>
