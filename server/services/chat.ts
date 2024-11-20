@@ -83,17 +83,33 @@ export async function generateChatResponse(userMessage: string): Promise<{
   try {
     const completion = await openai.chat.completions.create({
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage }
+        { 
+          role: 'system', 
+          content: SYSTEM_PROMPT 
+        },
+        { 
+          role: 'user', 
+          content: userMessage,
+        }
       ],
       // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       model: 'gpt-4o',
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 800,
       response_format: { type: "json_object" },
+      presence_penalty: 0.1,
+      frequency_penalty: 0.1,
     });
 
-    const responseText = completion.choices[0]?.message?.content;
+    // Validate response exists and is in correct format
+    if (!completion.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response format from OpenAI');
+    }
+
+    // Ensure proper UTF-8 encoding for the response
+    const responseText = new TextDecoder('utf-8').decode(
+      new TextEncoder().encode(completion.choices[0].message.content)
+    );
     
     if (!responseText) {
       throw new Error('No response received from OpenAI');
@@ -102,27 +118,65 @@ export async function generateChatResponse(userMessage: string): Promise<{
     let response: ChatResponse;
     
     try {
-      // Since we use response_format: "json_object", this should always be valid JSON
-      response = JSON.parse(responseText);
-      
-      // Validate response structure
-      if (!response.input_language || !response.translation || !Array.isArray(response.vocabulary)) {
-        throw new Error('Invalid response structure');
+      try {
+        // Parse and validate JSON structure
+        response = JSON.parse(responseText);
+        
+        // Deep validation of response structure
+        const validateChineseString = (str: string): string => {
+          if (!str) return '';
+          try {
+            // Test if string contains Chinese characters
+            const hasChineseChar = /[\u4E00-\u9FFF]/.test(str);
+            if (hasChineseChar) {
+              // Ensure proper UTF-8 encoding
+              return new TextDecoder('utf-8').decode(
+                new TextEncoder().encode(str)
+              );
+            }
+            return str;
+          } catch (e) {
+            console.error('Chinese character encoding error:', e);
+            return str;
+          }
+        };
+
+        if (!response.input_language || 
+            !response.translation || 
+            !Array.isArray(response.vocabulary)) {
+          throw new Error('Missing required fields in response');
+        }
+
+        // Validate and sanitize translation and explanation
+        response.translation = validateChineseString(response.translation);
+        response.explanation = validateChineseString(response.explanation || '');
+
+        // Validate and sanitize vocabulary items
+        response.vocabulary = response.vocabulary.map(item => {
+          if (!item.word || !item.translation) {
+            throw new Error('Invalid vocabulary item structure');
+          }
+
+          return {
+            ...item,
+            translation: validateChineseString(item.translation),
+            explanation: validateChineseString(item.explanation),
+            example_translation: validateChineseString(item.example_translation),
+            grammar_notes: validateChineseString(item.grammar_notes)
+          };
+        });
+
+        // Additional validation for Chinese content
+        if (!response.vocabulary.some(item => 
+          /[\u4E00-\u9FFF]/.test(item.translation) || 
+          /[\u4E00-\u9FFF]/.test(item.explanation || '')
+        )) {
+          console.warn('No Chinese characters found in vocabulary translations');
+        }
+      } catch (error) {
+        console.error('JSON parsing or validation error:', error);
+        throw error;
       }
-      
-      // Ensure all strings are properly encoded for Chinese characters
-      response.translation = decodeURIComponent(encodeURIComponent(response.translation));
-      response.explanation = response.explanation ? 
-        decodeURIComponent(encodeURIComponent(response.explanation)) : '';
-      
-      response.vocabulary = response.vocabulary.map(item => ({
-        ...item,
-        translation: decodeURIComponent(encodeURIComponent(item.translation)),
-        explanation: decodeURIComponent(encodeURIComponent(item.explanation)),
-        example_translation: decodeURIComponent(encodeURIComponent(item.example_translation)),
-        grammar_notes: decodeURIComponent(encodeURIComponent(item.grammar_notes))
-      }));
-      
     } catch (error) {
       console.error('Failed to parse or process JSON response:', error);
       response = {
