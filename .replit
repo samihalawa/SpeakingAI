@@ -41,7 +41,7 @@ args = "Development Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Deploy to Cloudflare"
+args = "GitHub Pages Build"
 
 [[workflows.workflow]]
 name = "Development Server"
@@ -59,7 +59,7 @@ args = "npm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
-name = "Deploy to Cloudflare"
+name = "GitHub Pages Build"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -70,4 +70,4 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node scripts/deploy.js"
+args = "npm run build"
