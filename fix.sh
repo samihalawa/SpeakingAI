@@ -1,173 +1,251 @@
 #!/bin/bash
 
-# Create backup of current state
-timestamp=$(date +%Y%m%d_%H%M%S)
-mkdir -p "./backups/$timestamp"
-cp -r ./client/src/components "./backups/$timestamp/"
+# Create backup directory
+mkdir -p ./backup/$(date +%Y%m%d_%H%M%S)
+cp -r ./client/src/components/* ./backup/$(date +%Y%m%d_%H%M%S)/
 
-# Fix ChatInterface.tsx JSX closing tag issue
-cat > ./client/src/components/ChatInterface.tsx << 'EOF'
-import React from 'react';
-import { Edit2, Trash2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { motion, AnimatePresence } from "framer-motion";
-import { Box } from "@radix-ui/themes";
+# Create types directory if it doesn't exist
+mkdir -p ./client/src/types
 
-export const ChatInterface: React.FC = () => {
+# Create vocabulary types file
+cat > ./client/src/types/vocabulary.ts << 'EOF'
+export interface VocabularyItem {
+  id: string;
+  word: string;
+  translation: string;
+  usage_type: '正式' | '口语' | '书面';
+  example?: string;
+  example_translation?: string;
+  grammar_notes?: string;
+  lastReviewed: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface VocabularyCardProps {
+  vocab: VocabularyItem;
+  onCardClick: (vocab: VocabularyItem) => void;
+}
+EOF
+
+# Update VocabularyCard component
+cat > ./client/src/components/VocabularyCard.tsx << 'EOF'
+import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { ChevronRight } from "lucide-react";
+import { VocabularyItem } from "@/types/vocabulary";
+
+interface Props {
+  vocab: VocabularyItem;
+  onCardClick: (vocab: VocabularyItem) => void;
+}
+
+export function VocabularyCard({ vocab, onCardClick }: Props) {
   return (
-    <div className="chat-container">
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <Box className="chat-content">
-            <Box className="messages">
-              <div className="message-list">
-                {/* Message content here */}
-              </div>
-            </Box>
-          </Box>
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-};
-
-export default ChatInterface;
-EOF
-
-# Update ErrorBoundary for better error handling
-cat > ./client/src/components/ui/ErrorBoundary.tsx << 'EOF'
-import React from 'react';
-import { AlertTriangle } from 'lucide-react';
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-}
-
-interface ErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-}
-
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('React Error Boundary caught an error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback || (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2 text-red-700 mb-2">
-            <AlertTriangle className="h-5 w-5" />
-            <h2 className="font-semibold">Something went wrong</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+    >
+      <Card 
+        className="p-4 hover:bg-accent/60 transition-all cursor-pointer group"
+        onClick={() => onCardClick(vocab)}
+      >
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-semibold text-lg">{vocab.word}</h3>
+              <span className={`text-sm px-2 py-0.5 rounded-full ${
+                vocab.usage_type === '正式' ? 'bg-blue-100 text-blue-700' :
+                vocab.usage_type === '口语' ? 'bg-green-100 text-green-700' :
+                'bg-purple-100 text-purple-700'
+              }`}>
+                {vocab.usage_type}
+              </span>
+            </div>
+            <p className="text-muted-foreground">{vocab.translation}</p>
           </div>
-          <p className="text-red-600 text-sm">
-            {this.state.error?.message || 'An unexpected error occurred'}
-          </p>
-          <button
-            onClick={() => this.setState({ hasError: false })}
-            className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded-md text-sm hover:bg-red-200 transition-colors"
-          >
-            Try again
-          </button>
+          <ChevronRight className="h-5 w-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-EOF
-
-# Update package.json to add missing dependencies
-npm install --save @radix-ui/react-dialog @radix-ui/themes lucide-react framer-motion
-
-# Add basic PWA capabilities without changing the core app
-cat > ./client/public/manifest.json << 'EOF'
-{
-  "name": "SamitoAI",
-  "short_name": "SamitoAI",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2A4494",
-  "icons": [
-    {
-      "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    }
-  ]
-}
-EOF
-
-# Update index.html with PWA meta tags
-sed -i '/<head>/a \
-    <link rel="manifest" href="/manifest.json">\
-    <meta name="theme-color" content="#2A4494">' ./client/index.html
-
-# Add simple service worker registration
-cat > ./client/public/service-worker.js << 'EOF'
-self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    fetch(event.request)
-      .catch(function() {
-        return caches.match(event.request);
-      })
+      </Card>
+    </motion.div>
   );
-});
-EOF
-
-# Fix theme configuration
-cat > ./client/src/theme.json << 'EOF'
-{
-  "variant": "professional",
-  "primary": "#2A4494",
-  "secondary": "#FF6B6B",
-  "accent": "#FBE6C2",
-  "background": "#FAFAFA",
-  "text": "#2D3748",
-  "appearance": "light",
-  "radius": 1.0
 }
 EOF
 
-# Update CSS imports
-cat >> ./client/src/styles/globals.css << 'EOF'
-@import '@radix-ui/themes/styles.css';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+# Update VocabularyDialog component
+cat > ./client/src/components/VocabularyDialog.tsx << 'EOF'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Edit2, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { VocabularyItem } from "@/types/vocabulary";
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+interface Props {
+  vocab: VocabularyItem;
+  isOpen: boolean;
+  onClose: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 0 0% 100%;
+export function VocabularyDialog({ vocab, isOpen, onClose, onEdit, onDelete }: Props) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{vocab.word}</span>
+              <Badge variant={
+                vocab.usage_type === '正式' ? 'default' :
+                vocab.usage_type === '口语' ? 'secondary' : 'outline'
+              }>
+                {vocab.usage_type}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              {onEdit && (
+                <Button variant="outline" size="icon" onClick={onEdit}>
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="text-destructive hover:bg-destructive/10"
+                  onClick={onDelete}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+        <motion.div 
+          className="space-y-6 py-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {/* Translation */}
+          <div className="space-y-2">
+            <h4 className="font-medium">Translation</h4>
+            <p className="text-muted-foreground">{vocab.translation}</p>
+          </div>
+
+          {/* Example */}
+          {vocab.example && (
+            <div className="space-y-2">
+              <h4 className="font-medium">Example</h4>
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <p>{vocab.example}</p>
+                {vocab.example_translation && (
+                  <p className="text-muted-foreground">{vocab.example_translation}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Grammar Notes */}
+          {vocab.grammar_notes && (
+            <div className="space-y-2">
+              <h4 className="font-medium">Grammar Notes</h4>
+              <div className="bg-blue-50 text-blue-900 p-4 rounded-lg">
+                <p>{vocab.grammar_notes}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Metadata */}
+          <div className="pt-4 border-t text-sm text-muted-foreground">
+            <p>Last reviewed: {new Date(vocab.lastReviewed).toLocaleDateString()}</p>
+            <p>Added: {new Date(vocab.createdAt).toLocaleDateString()}</p>
+          </div>
+        </motion.div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 EOF
 
-# Run build to verify changes
-echo "Running build to verify changes..."
-npm run build
+# Update VocabularyList component with sorting
+cat > ./client/src/components/VocabularyList.tsx << 'EOF'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { VocabularyItem } from "@/types/vocabulary";
+import { VocabularyCard } from "./VocabularyCard";
+import { VocabularyDialog } from "./VocabularyDialog";
+import { VocabularySearch } from "./VocabularySearch";
+import { Card } from "@/components/ui/card";
 
-echo "✅ All fixes have been applied successfully!"
-echo "🚀 The app should now work correctly with basic PWA capabilities"
+export function VocabularyList() {
+  const [selectedVocab, setSelectedVocab] = useState<VocabularyItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<'createdAt' | 'lastReviewed'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  const { data: vocabulary = [], refetch } = useQuery<VocabularyItem[]>({
+    queryKey: ["vocabulary"],
+    queryFn: async () => {
+      const response = await fetch("/api/vocabulary");
+      if (!response.ok) throw new Error("Failed to fetch vocabulary");
+      return response.json();
+    },
+  });
+
+  const sortedVocabulary = [...vocabulary].sort((a, b) => {
+    const dateA = new Date(a[sortBy]);
+    const dateB = new Date(b[sortBy]);
+    return sortOrder === 'desc' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
+  });
+
+  const filteredVocabulary = sortedVocabulary.filter(item =>
+    item.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.translation.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <Card className="h-full flex flex-col overflow-hidden border-0 rounded-none">
+      <VocabularySearch 
+        onSearch={setSearchTerm}
+        onSortChange={(by, order) => {
+          setSortBy(by as 'createdAt' | 'lastReviewed');
+          setSortOrder(order as 'desc' | 'asc');
+        }}
+      />
+      
+      <div className="flex-1 overflow-auto p-4 space-y-2">
+        {filteredVocabulary.map((vocab) => (
+          <VocabularyCard
+            key={vocab.id}
+            vocab={vocab}
+            onCardClick={setSelectedVocab}
+          />
+        ))}
+      </div>
+
+      {selectedVocab && (
+        <VocabularyDialog
+          vocab={selectedVocab}
+          isOpen={!!selectedVocab}
+          onClose={() => setSelectedVocab(null)}
+          onEdit={() => {/* Implement edit logic */}}
+          onDelete={() => {/* Implement delete logic */}}
+        />
+      )}
+    </Card>
+  );
+}
+EOF
+
+# Update permissions
+chmod +x ./update_components.sh
+
+echo "Components have been updated successfully!"
