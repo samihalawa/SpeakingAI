@@ -1,0 +1,9 @@
+name = "samito"
+compatibility_date = "2024-11-20"
+
+[build]
+command = "npm install && npm run build"
+
+[pages]
+directory = "dist/public"
+include = ["*"]
