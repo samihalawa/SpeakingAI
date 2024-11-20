@@ -1,6 +1,10 @@
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Book } from "lucide-react"
+import { ChatInterface } from "./ChatInterface"
+import { VocabularyList } from "./VocabularyList"
 
 export function Layout() {
   const [showVocabulary, setShowVocabulary] = useState(false)

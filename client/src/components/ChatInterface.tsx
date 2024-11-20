@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { VocabularyCard } from "./VocabularyCard";
 
 interface DetectedVocabulary {
   word: string;
@@ -27,6 +28,7 @@ interface DetectedVocabulary {
 }
 
 interface Message {
+  id: string;
   content: string;
   role: "user" | "assistant";
   detectedVocabulary: DetectedVocabulary[] | null;
@@ -135,11 +137,17 @@ export function ChatInterface() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 className={cn(
-                  "flex gap-3 relative",
-                  message.role === "user" ? "justify-end" : "justify-start"
+                  "flex flex-col gap-3 relative",
+                  message.role === "user" ? "justify-end items-end" : "justify-start items-start"
                 )}
               >
-                <VocabularyCard message={message} />
+                <div className={cn(
+                  "px-4 py-2 rounded-lg",
+                  message.role === "user" ? "bg-[#1B4965] text-white" : "bg-[#FBD38D]"
+                )}>
+                  <p>{message.content}</p>
+                </div>
+                {message.detectedVocabulary && <VocabularyCard message={message} />}
               </motion.div>
             ))}
           </div>

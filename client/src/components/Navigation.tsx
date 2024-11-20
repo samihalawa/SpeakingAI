@@ -52,12 +52,10 @@ export default function Navigation() {
       <Tooltip.Provider>
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <Link href="/">
-              <a className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F2CC8F] rounded-md" role="menuitem">
-                <MessageSquare className="h-5 w-5" aria-hidden="true" />
-                <span>Chat</span>
-              </a>
-            </Link>
+            <button className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F2CC8F] rounded-md" role="menuitem" onClick={() => window.location.href = "/"}>
+              <MessageSquare className="h-5 w-5" aria-hidden="true" />
+              <span>Chat</span>
+            </button>
           </Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Content className="bg-gray-900 text-white px-2 py-1 rounded text-sm">
@@ -69,12 +67,10 @@ export default function Navigation() {
 
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <Link href="/vocabulary">
-              <a className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F2CC8F] rounded-md" role="menuitem">
-                <BookOpen className="h-5 w-5" aria-hidden="true" />
-                <span>Vocabulary</span>
-              </a>
-            </Link>
+            <button className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F2CC8F] rounded-md" role="menuitem" onClick={() => window.location.href = "/vocabulary"}>
+              <BookOpen className="h-5 w-5" aria-hidden="true" />
+              <span>Vocabulary</span>
+            </button>
           </Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Content className="bg-gray-900 text-white px-2 py-1 rounded text-sm">
@@ -91,11 +87,9 @@ export default function Navigation() {
     <header className="border-b bg-[#1B4965] sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/">
-            <a className="text-2xl font-bold text-white hover:text-[#F2CC8F] transition-colors">
-              ¡Aprende!
-            </a>
-          </Link>
+          <button onClick={() => window.location.href = "/"} className="text-2xl font-bold text-white hover:text-[#F2CC8F] transition-colors">
+            ¡Aprende!
+          </button>
           
           {isMobile ? (
             <DropdownMenu.Root>
@@ -114,20 +108,16 @@ export default function Navigation() {
                   sideOffset={5}
                 >
                   <DropdownMenu.Item className="p-2 outline-none cursor-pointer rounded hover:bg-gray-100">
-                    <Link href="/">
-                      <a className="flex items-center gap-2 text-gray-700">
-                        <MessageSquare className="h-5 w-5" />
-                        Chat
-                      </a>
-                    </Link>
+                    <button onClick={() => window.location.href = "/"} className="flex items-center gap-2 text-gray-700 w-full text-left">
+                      <MessageSquare className="h-5 w-5" />
+                      Chat
+                    </button>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item className="p-2 outline-none cursor-pointer rounded hover:bg-gray-100">
-                    <Link href="/vocabulary">
-                      <a className="flex items-center gap-2 text-gray-700">
-                        <BookOpen className="h-5 w-5" />
-                        Vocabulary
-                      </a>
-                    </Link>
+                    <button onClick={() => window.location.href = "/vocabulary"} className="flex items-center gap-2 text-gray-700 w-full text-left">
+                      <BookOpen className="h-5 w-5" />
+                      Vocabulary
+                    </button>
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
