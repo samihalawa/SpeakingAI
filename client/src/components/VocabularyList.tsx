@@ -25,6 +25,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  ScrollArea,
+  ScrollBar
+} from "@/components/ui/scroll-area";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -125,15 +141,24 @@ export function VocabularyList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-4 p-4 bg-card rounded-lg">
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={() => setIsCommandOpen(true)}
-        >
-          <Search className="w-4 h-4 mr-2" />
-          Quick Search
-        </Button>
+      <Tabs defaultValue="search" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+          <TabsTrigger value="search">Search</TabsTrigger>
+          <TabsTrigger value="filters">Filters</TabsTrigger>
+          <TabsTrigger value="dates">Date Range</TabsTrigger>
+          <TabsTrigger value="stats">Statistics</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="search">
+          <div className="p-4 bg-card rounded-lg">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setIsCommandOpen(true)}
+            >
+              <Search className="w-4 h-4 mr-2" />
+              Quick Search
+            </Button>
 
         <Command className={`rounded-lg border shadow-md ${isCommandOpen ? '' : 'hidden'}`}>
           <CommandInput placeholder="Search vocabulary..." />
@@ -201,9 +226,12 @@ export function VocabularyList() {
           />
         </div>
       </div>
+    </TabsContent>
+  </Tabs>
 
-      <div ref={parentRef} className="h-[600px] overflow-auto">
+  <ScrollArea className="h-[600px] rounded-md border" ref={parentRef}>
         <Table>
+          <ScrollBar orientation="horizontal" />
           <TableHeader>
             <TableRow>
               <TableHead>Spanish</TableHead>
@@ -226,10 +254,31 @@ export function VocabularyList() {
                 >
                   <TableCell className="font-medium">
                     <Collapsible>
-                      {({ open }) => (
+                      {({ open }: { open: boolean }) => (
                         <>
                           <CollapsibleTrigger className="flex items-center gap-2 w-full transition-all duration-200 hover:bg-accent/10 rounded px-2 py-1">
-                            <span>{item.spanish}</span>
+                            <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <span className="cursor-help">{item.spanish}</span>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-80">
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-semibold">{item.spanish}</h4>
+                            <Separator />
+                            <p className="text-sm">{item.chinese}</p>
+                            {item.example && (
+                              <>
+                                <Separator />
+                                <p className="text-sm text-muted-foreground">{item.example}</p>
+                              </>
+                            )}
+                            <div className="flex gap-2 mt-2">
+                              <Badge variant="secondary">{item.wordType}</Badge>
+                              <Badge variant="outline">{item.difficulty}</Badge>
+                            </div>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
                             {open ? (
                               <ChevronUp className="h-4 w-4 transition-transform duration-200" />
                             ) : (
@@ -290,7 +339,7 @@ export function VocabularyList() {
             })}
           </TableBody>
         </Table>
-      </div>
+      </ScrollArea>
     </div>
   );
 }
