@@ -16,7 +16,18 @@ interface Message {
   content: string;
   role: "user" | "assistant";
   detectedVocabulary: DetectedVocabulary[] | null;
+  timestamp?: string;
 }
+
+// Logging utility
+const logChat = {
+  message: (type: "sent" | "received", content: string) => 
+    console.log(`Chat ${type}:`, content),
+  vocabulary: (items: DetectedVocabulary[]) => 
+    console.log("Detected vocabulary:", items),
+  error: (error: unknown) => 
+    console.error("Chat error:", error)
+};
 
 export function ChatInterface() {
   const [input, setInput] = useState("");
@@ -34,19 +45,26 @@ export function ChatInterface() {
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
+      logChat.message("sent", content);
       const response = await fetch("/api/chat/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
       if (!response.ok) throw new Error("Failed to send message");
-      return response.json();
+      const data = await response.json();
+      logChat.message("received", data.response.content);
+      if (data.detectedVocabulary?.length > 0) {
+        logChat.vocabulary(data.detectedVocabulary);
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chat-messages"] });
       setInput("");
     },
-    onError: () => {
+    onError: (error) => {
+      logChat.error(error);
       toast({
         title: "Error",
         description: "Failed to send message",
@@ -76,10 +94,10 @@ export function ChatInterface() {
           >
             <div className="space-y-2">
               <p>{message.content}</p>
-              {message.role === "assistant" && message.detectedVocabulary?.length > 0 && (
+              {message.role === "assistant" && message.detectedVocabulary && message.detectedVocabulary.length > 0 && (
                 <div className="text-sm mt-2 p-2 bg-accent/50 rounded">
                   <p className="font-semibold mb-1">Vocabulary:</p>
-                  {message.detectedVocabulary.map(({ word, translation }) => (
+                  {message.detectedVocabulary?.map(({ word, translation }) => (
                     <p key={word} className="text-sm">
                       {word} - {translation}
                     </p>
