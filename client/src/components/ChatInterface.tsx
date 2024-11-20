@@ -29,8 +29,13 @@ interface ChatVocabulary {
 // Helper function to convert ChatVocabulary to VocabularyItem
 function toVocabularyItem(vocab: ChatVocabulary): VocabularyItem {
   return {
-    ...vocab,
     id: `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    word: vocab.word,
+    translation: vocab.translation,
+    usage_type: vocab.usage_type,
+    example: vocab.example,
+    example_translation: vocab.example_translation,
+    grammar_notes: vocab.grammar_notes,
     lastReviewed: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -53,7 +58,7 @@ interface Message {
 const logChat = {
   message: (type: "sent" | "received", content: string) => 
     console.log(`Chat ${type}:`, content),
-  vocabulary: (items: DetectedVocabulary[]) => 
+  vocabulary: (items: ChatVocabulary[]) => 
     console.log("Detected vocabulary:", items),
   error: (error: unknown) => 
     console.error("Chat error:", error)
