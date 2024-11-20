@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { sendWebSocketMessage } from "../lib/websocket";
-import { Send, Plus } from "lucide-react";
+import { Send, Plus, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import ReactMarkdown from 'react-markdown';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,6 +45,8 @@ export function ChatInterface() {
   const [input, setInput] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [] } = useQuery<Message[]>({
     queryKey: ["chat-messages"],
@@ -53,6 +56,13 @@ export function ChatInterface() {
       return response.json();
     },
   });
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (endRef.current) {
+      endRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
@@ -88,6 +98,10 @@ export function ChatInterface() {
     e.preventDefault();
     if (input.trim()) {
       sendMessage.mutate(input);
+      // Scroll to bottom immediately when sending message
+      if (endRef.current) {
+        endRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
@@ -122,13 +136,21 @@ export function ChatInterface() {
                             index === 0 ? 'text-base' : 'text-sm text-muted-foreground'
                           }`}
                         >
-                          {part}
+                          <ReactMarkdown className="prose prose-sm dark:prose-invert">
+                            {part}
+                          </ReactMarkdown>
                         </div>
                       ))}
                     </div>
                   </div>
-                  {message.role === "assistant" && message.detectedVocabulary && message.detectedVocabulary.length > 0 && (
-                    <div className="mt-4 p-3 bg-accent rounded-md text-sm">
+                  <AnimatePresence>
+                    {message.role === "assistant" && message.detectedVocabulary && message.detectedVocabulary.length > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-4 p-3 bg-accent rounded-md text-sm"
+                    >
                       <div className="font-medium mb-2">
                         New Vocabulary:
                       </div>
@@ -160,7 +182,24 @@ export function ChatInterface() {
                                     notes: `${vocab.grammar_notes}\n${vocab.context}`,
                                     wordType: vocab.type.toLowerCase(),
                                     difficulty: vocab.level.toLowerCase(),
+                                    tags: vocab.colloquial ? ['colloquial'] : [],
                                   };
+
+                                  toast({
+                                    title: "Adding vocabulary...",
+                                    description: (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <span>{vocab.word}</span>
+                                        <ChevronDown className="h-4 w-4" />
+                                        <span>{vocab.translation}</span>
+                                      </motion.div>
+                                    ),
+                                  });
+
                                   fetch("/api/vocabulary", {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
@@ -170,12 +209,21 @@ export function ChatInterface() {
                                     .then((data) => {
                                       toast({
                                         title: "Success",
-                                        description: "Word added to vocabulary",
+                                        description: (
+                                          <motion.div
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className="text-green-600"
+                                          >
+                                            Word added to vocabulary successfully!
+                                          </motion.div>
+                                        ),
                                       });
                                       sendWebSocketMessage({
                                         type: "vocabulary_update",
                                         item: data,
                                       });
+                                      queryClient.invalidateQueries({ queryKey: ["vocabulary"] });
                                     })
                                     .catch(() => {
                                       toast({
@@ -218,12 +266,14 @@ export function ChatInterface() {
                           </div>
                         </motion.div>
                       ))}
-                    </div>
+                    </motion.div>
                   )}
+                  </AnimatePresence>
                 </div>
               </Card>
             </div>
           ))}
+          <div ref={endRef} />
         </div>
       </ScrollArea>
       <div className="p-4 border-t">
