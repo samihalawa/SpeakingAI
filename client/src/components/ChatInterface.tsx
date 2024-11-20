@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
 import { sendWebSocketMessage } from "../lib/websocket";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send } from "lucide-react";
+import { Send, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface DetectedVocabulary {
   word: string;
@@ -91,129 +92,159 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-[600px]">
-      <ScrollArea className="flex-1 p-4 space-y-4">
-        {messages.map((message, i) => (
-          <Card
-            key={i}
-            className={`p-4 max-w-[80%] ${
-              message.role === "user"
-                ? "ml-auto bg-[#E25822] text-white"
-                : "bg-[#FBD38D]"
-            }`}
-          >
-            <div className="space-y-2">
-              <div className="space-y-2">
-                {message.content.split('\n\n').map((part, index) => (
-                  <p
-                    key={index}
-                    className={`${
-                      index === 0 ? 'text-base' : 'text-sm text-gray-700'
-                    }`}
-                  >
-                    {part}
-                  </p>
-                ))}
-              </div>
-              {message.role === "assistant" && message.detectedVocabulary && message.detectedVocabulary.length > 0 && (
-                <div className="text-sm mt-2 p-2 bg-accent/50 rounded">
-                  <p className="font-semibold mb-1">New Vocabulary:</p>
-                  {message.detectedVocabulary?.map((vocab, index) => (
-                  <motion.div
-                    key={vocab.word}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.15 }}
-                    className="flex items-center justify-between gap-2 mb-1 group relative"
-                  >
-                      <div className="flex items-center justify-between w-full">
-                        <div
-                          className="hover:bg-accent/80 p-1 rounded cursor-help"
-                          data-tooltip-id={`tooltip-${vocab.word}`}
+    <div className="h-[600px] flex flex-col relative">
+      <ScrollArea className="flex-1 p-4">
+        <div className="flex flex-col space-y-4">
+          {messages.map((message, i) => (
+            <div 
+              key={i} 
+              className={`max-w-[80%] ${
+                message.role === "user" ? "ml-auto" : "mr-auto"
+              }`}
+            >
+              <Card className={`${
+                message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+              }`}>
+                <div className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage
+                        src={message.role === "user" ? "/user-avatar.png" : "/bot-avatar.png"}
+                        alt={message.role === "user" ? "User" : "Bot"}
+                      />
+                      <AvatarFallback>{message.role === "user" ? "U" : "B"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col gap-2">
+                      {message.content.split('\n\n').map((part, index) => (
+                        <div 
+                          key={index}
+                          className={`${
+                            index === 0 ? 'text-base' : 'text-sm text-muted-foreground'
+                          }`}
                         >
-                          <span className="font-medium">{vocab.word}</span>
-                          <span className="mx-2">-</span>
-                          <span>{vocab.translation}</span>
-                          <div
-                            className="absolute hidden group-hover:block bg-white border p-2 rounded shadow-lg z-10 -top-2 left-full ml-2 w-96"
-                          >
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center">
+                          {part}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {message.role === "assistant" && message.detectedVocabulary && message.detectedVocabulary.length > 0 && (
+                    <div className="mt-4 p-3 bg-accent rounded-md text-sm">
+                      <div className="font-medium mb-2">
+                        New Vocabulary:
+                      </div>
+                      {message.detectedVocabulary.map((vocab, index) => (
+                        <motion.div
+                          key={vocab.word}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.15 }}
+                          className="mb-2 last:mb-0"
+                        >
+                          <div className="relative">
+                            <div className="flex items-center justify-between">
+                              <div className="p-2 bg-background rounded-md cursor-help">
                                 <div className="flex items-center gap-2">
-                                  <p className="font-medium text-primary">{vocab.type}</p>
+                                  <span className="font-medium">{vocab.word}</span>
+                                  <span>-</span>
+                                  <span>{vocab.translation}</span>
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const newVocab = {
+                                    spanish: vocab.word,
+                                    chinese: vocab.translation,
+                                    example: vocab.example,
+                                    notes: `${vocab.grammar_notes}\n${vocab.context}`,
+                                    wordType: vocab.type.toLowerCase(),
+                                    difficulty: vocab.level.toLowerCase(),
+                                  };
+                                  fetch("/api/vocabulary", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(newVocab),
+                                  })
+                                    .then((response) => response.json())
+                                    .then((data) => {
+                                      toast({
+                                        title: "Success",
+                                        description: "Word added to vocabulary",
+                                      });
+                                      sendWebSocketMessage({
+                                        type: "vocabulary_update",
+                                        item: data,
+                                      });
+                                    })
+                                    .catch(() => {
+                                      toast({
+                                        title: "Error",
+                                        description: "Failed to add word",
+                                        variant: "destructive",
+                                      });
+                                    });
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add to Vocabulary
+                              </Button>
+                            </div>
+                            <div className="mt-2 p-2 bg-accent/10 rounded-md">
+                              <div className="flex flex-col gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{vocab.type}</span>
                                   {vocab.colloquial && (
-                                    <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded">
+                                    <span className="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs">
                                       {vocab.colloquial_indicator || '口语'}
                                     </span>
                                   )}
+                                  <span className="px-2 py-0.5 bg-accent text-accent-foreground rounded text-xs">
+                                    {vocab.level}
+                                  </span>
                                 </div>
-                                <span className="text-sm px-2 py-1 bg-accent rounded">{vocab.level}</span>
+                                <div>
+                                  <p className="italic">{vocab.example}</p>
+                                  <p className="text-muted-foreground">{vocab.example_translation}</p>
+                                </div>
+                                {vocab.context && (
+                                  <p className="text-muted-foreground">{vocab.context}</p>
+                                )}
+                                {vocab.grammar_notes && (
+                                  <p className="text-muted-foreground">{vocab.grammar_notes}</p>
+                                )}
                               </div>
-                              <div className="space-y-1">
-                                <p className="text-sm font-medium">{vocab.example}</p>
-                                <p className="text-sm text-gray-600">{vocab.example_translation}</p>
-                              </div>
-                              <p className="text-sm text-gray-600">{vocab.context}</p>
-                              <p className="text-sm text-gray-600">{vocab.grammar_notes}</p>
                             </div>
                           </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const newVocab = {
-                              spanish: vocab.word,
-                              chinese: vocab.translation,
-                              example: vocab.example,
-                            };
-                            fetch("/api/vocabulary", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify(newVocab),
-                            })
-                              .then((response) => response.json())
-                              .then((data) => {
-                                toast({
-                                  title: "Success",
-                                  description: "Word added to vocabulary",
-                                });
-                                sendWebSocketMessage({
-                                  type: "vocabulary_update",
-                                  item: data,
-                                });
-                              })
-                              .catch(() => {
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to add word",
-                                  variant: "destructive",
-                                });
-                              });
-                          }}
-                        >
-                          Add to Vocabulary
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </Card>
             </div>
-          </Card>
-        ))}
+          ))}
+        </div>
       </ScrollArea>
-      <form onSubmit={handleSubmit} className="p-4 flex gap-2">
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-        />
-        <Button type="submit" disabled={sendMessage.isPending}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </form>
+      <div className="p-4 border-t">
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              className="flex-1"
+            />
+            <Button 
+              disabled={sendMessage.isPending}
+              type="submit"
+              size="icon"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
