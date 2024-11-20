@@ -1,17 +1,13 @@
 export interface VocabularyItem {
-  id: string;
+  id?: string;
   word: string;
   translation: string;
-  usage_type: '正式' | '口语' | '书面';
+  usage_type: string;
+  explanation?: string;
   example?: string;
   example_translation?: string;
   grammar_notes?: string;
-  lastReviewed: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface VocabularyCardProps {
-  vocab: VocabularyItem;
-  onCardClick: (vocab: VocabularyItem) => void;
+  usage_notes?: string;
+  createdAt: Date | string;
+  lastReviewed: Date | string;
 }

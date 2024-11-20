@@ -1,5 +1,8 @@
 {pkgs}: {
   deps = [
+    pkgs.tree
+    pkgs.wget
+    pkgs.jq
     pkgs.cups
     pkgs.atk
     pkgs.glib
