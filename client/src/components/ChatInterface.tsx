@@ -145,7 +145,16 @@ export function ChatInterface() {
                   "px-4 py-2 rounded-lg",
                   message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 )}>
-                  <p>{message.content}</p>
+                  <div className="space-y-2">
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    {message.explanation && (
+                      <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {message.explanation}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {message.detectedVocabulary && <VocabularyCard message={message} />}
               </motion.div>

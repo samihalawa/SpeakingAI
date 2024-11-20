@@ -8,13 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 interface DetectedVocabulary {
   word: string;
   translation: string;
-  colloquial: boolean;
-  colloquial_indicator?: string;
-  type: string;
-  level: string;
+  usage_type: '正式' | '口语' | '习语';
+  explanation: string;
   example: string;
   example_translation: string;
-  context: string;
   grammar_notes: string;
 }
 
@@ -22,6 +19,7 @@ interface Message {
   content: string;
   role: "user" | "assistant";
   detectedVocabulary: DetectedVocabulary[] | null;
+  explanation?: string;
   timestamp?: string;
 }
 
@@ -75,34 +73,63 @@ export function VocabularyCard({ message }: VocabularyCardProps) {
           exit={{ opacity: 0, y: -10 }}
           className="group relative"
         >
-          <Card className="p-3 bg-accent/50">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-medium">{vocab.word}</p>
-                <p className="text-sm text-muted-foreground">
-                  {vocab.translation}
-                </p>
-                {vocab.example && (
-                  <p className="text-sm mt-2 text-muted-foreground">
-                    {vocab.example}
+          <Card className="p-4 bg-accent/50">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1 space-y-3">
+                {/* Word and Translation */}
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-medium text-lg">{vocab.word}</p>
+                    <span className="text-sm px-2 py-0.5 bg-primary/10 rounded-full">
+                      {vocab.usage_type}
+                    </span>
+                  </div>
+                  <p className="text-base text-muted-foreground">
+                    {vocab.translation}
                   </p>
+                </div>
+
+                {/* Explanation */}
+                {vocab.explanation && (
+                  <div className="bg-background/50 p-3 rounded-md">
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {vocab.explanation}
+                    </p>
+                  </div>
+                )}
+
+                {/* Example */}
+                {vocab.example && (
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">例句:</p>
+                    <p className="text-sm">{vocab.example}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {vocab.example_translation}
+                    </p>
+                  </div>
+                )}
+
+                {/* Grammar Notes */}
+                {vocab.grammar_notes && (
+                  <div className="bg-blue-50 p-3 rounded-md">
+                    <p className="text-sm font-medium mb-1">语法笔记:</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {vocab.grammar_notes}
+                    </p>
+                  </div>
                 )}
               </div>
+
               <Button
                 size="sm"
                 variant="ghost"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                 onClick={() => addToVocabulary.mutate(vocab)}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add to Vocabulary
+                加入词库
               </Button>
             </div>
-            {vocab.colloquial && (
-              <div className="mt-2 text-xs text-yellow-600 bg-yellow-50 p-2 rounded">
-                {vocab.colloquial_indicator}
-              </div>
-            )}
           </Card>
         </motion.div>
       ))}
