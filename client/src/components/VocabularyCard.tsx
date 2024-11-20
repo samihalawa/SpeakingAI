@@ -75,26 +75,30 @@ export function VocabularyCard({ message }: VocabularyCardProps) {
           exit={{ opacity: 0, y: -10 }}
           className="group relative"
         >
-          <Card className="p-4 bg-accent/50">
+          <Card className="p-4 bg-accent/50 hover:bg-accent/60 transition-colors">
             <div className="flex justify-between items-start gap-4">
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-4">
                 {/* Word and Translation */}
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium text-lg">{vocab.word}</p>
-                    <span className="text-sm px-2 py-0.5 bg-primary/10 rounded-full">
+                <div className="border-b pb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="font-semibold text-lg tracking-wide">{vocab.word}</p>
+                    <span className={`text-sm px-2 py-0.5 rounded-full font-medium ${
+                      vocab.usage_type === '正式' ? 'bg-blue-100 text-blue-700' :
+                      vocab.usage_type === '口语' ? 'bg-green-100 text-green-700' :
+                      'bg-purple-100 text-purple-700'
+                    }`}>
                       {vocab.usage_type}
                     </span>
                   </div>
-                  <p className="text-base text-muted-foreground">
+                  <p className="text-base text-muted-foreground font-medium">
                     {vocab.translation}
                   </p>
                 </div>
 
                 {/* Explanation */}
                 {vocab.explanation && (
-                  <div className="bg-background/50 p-3 rounded-md">
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <div className="bg-background/80 p-3 rounded-md border border-border/50">
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                       {vocab.explanation}
                     </p>
                   </div>
@@ -102,20 +106,22 @@ export function VocabularyCard({ message }: VocabularyCardProps) {
 
                 {/* Example */}
                 {vocab.example && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">例句:</p>
-                    <p className="text-sm">{vocab.example}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {vocab.example_translation}
-                    </p>
+                  <div className="space-y-2 bg-primary/5 p-3 rounded-md">
+                    <p className="text-sm font-medium text-primary">例句:</p>
+                    <div className="pl-2 border-l-2 border-primary/20">
+                      <p className="text-sm font-medium">{vocab.example}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {vocab.example_translation}
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {/* Grammar Notes */}
                 {vocab.grammar_notes && (
-                  <div className="bg-blue-50 p-3 rounded-md">
-                    <p className="text-sm font-medium mb-1">语法笔记:</p>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <div className="bg-blue-50/80 p-3 rounded-md border border-blue-100">
+                    <p className="text-sm font-medium mb-2 text-blue-700">语法笔记:</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                       {vocab.grammar_notes}
                     </p>
                   </div>

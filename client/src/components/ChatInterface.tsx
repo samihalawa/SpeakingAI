@@ -31,6 +31,8 @@ interface Message {
   detectedVocabulary: DetectedVocabulary[] | null;
   explanation?: string;
   timestamp?: string;
+  input_language?: "chinese" | "spanish";
+  translation?: string;
 }
 
 // Logging utility
@@ -144,10 +146,19 @@ export function ChatInterface() {
                   message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 )}>
                   <div className="space-y-2">
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                    {message.explanation && (
-                      <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                    <div className="space-y-1">
+                      <p className="whitespace-pre-wrap font-medium">
+                        {message.role === "user" ? message.content : message.translation}
+                      </p>
+                      {message.role === "assistant" && (
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {message.content}
+                        </p>
+                      )}
+                    </div>
+                    {message.explanation && (
+                      <div className="mt-2 p-2 bg-muted/50 rounded-md border border-muted">
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                           {message.explanation}
                         </p>
                       </div>
