@@ -155,15 +155,20 @@ export function ChatInterface() {
         </ScrollArea>
       </Card>
       
-      <div className="sticky bottom-0 w-full bg-background border-t z-10">
-        <form onSubmit={handleSubmit} className="p-4 flex gap-2 max-w-2xl mx-auto">
+      <div className="sticky bottom-0 w-full bg-background border-t z-50 shadow-lg">
+        <form onSubmit={handleSubmit} className="px-4 py-3 sm:py-4 flex gap-2 max-w-2xl mx-auto items-center">
           <Input 
             placeholder="输入消息..."
             value={input}
             onChange={handleTyping}
-            className="flex-1"
+            className="flex-1 min-w-0 h-10 sm:h-11"
           />
-          <Button type="submit" size="icon" disabled={sendMessage.isPending}>
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={sendMessage.isPending}
+            className="shrink-0 h-10 sm:h-11 w-10 sm:w-11"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </form>
