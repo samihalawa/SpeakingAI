@@ -126,10 +126,10 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
       <Card className="flex-1 flex flex-col min-h-0 overflow-hidden border-0 rounded-none bg-background">
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="space-y-4 max-w-2xl mx-auto">
+        <ScrollArea className="flex-1 min-h-0 pb-4">
+          <div className="space-y-4 max-w-2xl mx-auto p-4">
             {messages.map((message) => (
               <motion.div
                 key={message.id}
@@ -155,8 +155,8 @@ export function ChatInterface() {
         </ScrollArea>
       </Card>
       
-      <div className="sticky bottom-0 w-full bg-background border-t z-50 shadow-lg">
-        <form onSubmit={handleSubmit} className="px-4 py-3 sm:py-4 flex gap-2 max-w-2xl mx-auto items-center">
+      <div className="sticky bottom-0 w-full bg-background border-t z-[9999] shadow-lg">
+        <form onSubmit={handleSubmit} className="px-4 py-3 sm:py-4 md:pb-6 flex gap-2 max-w-2xl mx-auto items-center">
           <Input 
             placeholder="输入消息..."
             value={input}
