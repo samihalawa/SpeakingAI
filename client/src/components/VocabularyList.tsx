@@ -34,7 +34,7 @@ export function VocabularyList() {
     },
   });
   return (
-    <Card className="h-full flex flex-col overflow-hidden border-0 rounded-none">
+    <Card className="h-screen flex flex-col overflow-hidden border-0 rounded-none">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">词汇表</h2>

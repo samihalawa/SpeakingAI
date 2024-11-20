@@ -126,8 +126,8 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-screen">
-      <Card className="flex-1 flex flex-col overflow-hidden border-0 rounded-none">
+    <div className="flex flex-col h-screen">
+      <Card className="flex-1 flex flex-col overflow-hidden border-0 rounded-none bg-background">
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4 max-w-2xl mx-auto">
             {messages.map((message) => (
