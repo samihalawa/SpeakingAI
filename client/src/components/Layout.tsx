@@ -12,7 +12,7 @@ export function Layout() {
 
   return (
     <div className={cn(
-      "h-screen grid",
+      "h-screen grid overflow-hidden",
       isDesktop ? "grid-cols-[1fr_400px]" : "grid-cols-1"
     )}>
       <ChatInterface />
