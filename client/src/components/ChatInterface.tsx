@@ -1,5 +1,3 @@
-import type { Message, ChatVocabulary } from "@/types/chat"
-import { useToast } from "@/components/ui/use-toast"
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { sendWebSocketMessage } from "../lib/websocket";
