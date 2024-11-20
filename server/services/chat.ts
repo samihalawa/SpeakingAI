@@ -7,20 +7,41 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are a Spanish language tutor. Respond in Spanish and help the user learn Spanish. 
-Follow these rules:
-1. Keep responses concise (2-3 sentences)
-2. Use simple, everyday Spanish
-3. Incorporate common vocabulary and phrases
-4. Correct any Spanish grammar mistakes in user messages
-5. If the user writes in English, respond in both Spanish and English`;
+const SYSTEM_PROMPT = `You are a Spanish language tutor. Respond in JSON format with the following structure:
+{
+  "spanish": "Spanish response text",
+  "english": "English translation (if user wrote in English)",
+  "vocabulary": [
+    {
+      "word": "Spanish word",
+      "translation": "Chinese translation",
+      "type": "noun/verb/adjective",
+      "example": "Example sentence"
+    }
+  ]
+}`;
+
+interface ChatResponse {
+  spanish: string;
+  english?: string;
+  vocabulary: Array<{
+    word: string;
+    translation: string;
+    type: string;
+    example: string;
+  }>;
+}
 
 export async function generateChatResponse(userMessage: string): Promise<{
   content: string;
-  detectedVocabulary: Array<{ word: string; translation: string }>;
+  detectedVocabulary: Array<{
+    word: string;
+    translation: string;
+    type: string;
+    example: string;
+  }>;
 }> {
   try {
-    // Get chat completion from OpenAI
     const completion = await openai.chat.completions.create({
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -28,34 +49,48 @@ export async function generateChatResponse(userMessage: string): Promise<{
       ],
       model: 'gpt-3.5-turbo',
       temperature: 0.7,
-      max_tokens: 150,
+      max_tokens: 300,
     });
 
-    const response = completion.choices[0]?.message?.content || 'Lo siento, no entiendo.';
+    const responseText = completion.choices[0]?.message?.content || '{"spanish": "Lo siento, no entiendo.", "vocabulary": []}';
+    let response: ChatResponse;
+    
+    try {
+      response = JSON.parse(responseText);
+    } catch (error) {
+      console.error('Failed to parse JSON response:', error);
+      response = {
+        spanish: responseText,
+        vocabulary: []
+      };
+    }
 
-    // Extract Spanish words for vocabulary detection
-    const words = response.match(/\b\w+\b/g) || [];
-    const uniqueWords = Array.from(new Set(words));
-
-    // Check against existing vocabulary using OR conditions
-    const detectedVocabulary = await db
+    // Check if any vocabulary words already exist in the database
+    const existingVocabulary = await db
       .select()
       .from(vocabularyItems)
       .where(
-        or(...uniqueWords.map(word => eq(vocabularyItems.spanish, word.toLowerCase())))
+        or(...response.vocabulary.map(v => eq(vocabularyItems.spanish, v.word.toLowerCase())))
       );
 
+    const existingWords = new Set(existingVocabulary.map(v => v.spanish.toLowerCase()));
+    
+    // Filter out existing vocabulary
+    const newVocabulary = response.vocabulary.filter(v => !existingWords.has(v.word.toLowerCase()));
+
     console.log('Chat response generated:', {
-      messageLength: response.length,
-      detectedVocabularyCount: detectedVocabulary.length,
+      messageLength: response.spanish.length,
+      detectedVocabularyCount: newVocabulary.length,
     });
 
+    // Construct the display content
+    const content = userMessage.toLowerCase().startsWith('translate:') || /^[a-zA-Z\s,.!?]+$/.test(userMessage)
+      ? `${response.spanish}\n\n${response.english || ''}`
+      : response.spanish;
+
     return {
-      content: response,
-      detectedVocabulary: detectedVocabulary.map(item => ({
-        word: item.spanish,
-        translation: item.chinese,
-      })),
+      content,
+      detectedVocabulary: newVocabulary,
     };
   } catch (error) {
     console.error('Error generating chat response:', error);
