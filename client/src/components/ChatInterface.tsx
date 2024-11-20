@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { sendWebSocketMessage } from "../lib/websocket";
-import { Send, Plus, ChevronDown, Loader2 } from "lucide-react";
+import { Send, Plus, ChevronDown, Loader2, MessageCircle, Languages, BookOpen, Book } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from 'react-markdown';
@@ -141,31 +141,53 @@ export function ChatInterface() {
                   message.role === "user" ? "justify-end items-end" : "justify-start items-start"
                 )}
               >
-                <div className={cn(
-                  "px-4 py-2 rounded-lg",
-                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                <Card className={cn(
+                  "w-full",
+                  message.role === "user" ? "bg-primary/10" : "bg-accent/50"
                 )}>
-                  <div className="space-y-2">
-                    <div className="space-y-1">
-                      <p className="whitespace-pre-wrap font-medium">
+                  <div className="p-4 space-y-4">
+                    {/* Original Message */}
+                    <div className="flex items-start gap-2">
+                      <MessageCircle className="h-5 w-5 mt-1 shrink-0 text-primary" />
+                      <p className="text-lg font-medium">
                         {message.role === "user" ? message.content : message.translation}
                       </p>
-                      {message.role === "assistant" && (
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {message.content}
-                        </p>
-                      )}
                     </div>
+
+                    {/* Translation if exists and is assistant message */}
+                    {message.role === "assistant" && message.content && (
+                      <div className="flex items-start gap-2 pl-7">
+                        <Languages className="h-5 w-5 mt-1 shrink-0 text-blue-500" />
+                        <p className="text-base text-muted-foreground">{message.content}</p>
+                      </div>
+                    )}
+
+                    {/* Explanation if exists */}
                     {message.explanation && (
-                      <div className="mt-2 p-2 bg-muted/50 rounded-md border border-muted">
+                      <div className="flex items-start gap-2 pl-7 bg-accent/50 p-3 rounded-md">
+                        <BookOpen className="h-5 w-5 mt-1 shrink-0 text-emerald-500" />
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                           {message.explanation}
                         </p>
                       </div>
                     )}
+
+                    {/* Vocabulary Section */}
+                    {message.detectedVocabulary && message.detectedVocabulary.length > 0 && (
+                      <div className="pl-7 mt-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Book className="h-5 w-5 text-amber-500" />
+                          <p className="text-sm font-medium">检测到的词汇:</p>
+                        </div>
+                        <div className="grid gap-2">
+                          {message.detectedVocabulary.map((vocab, idx) => (
+                            <VocabularyCard key={`${vocab.word}-${idx}`} message={{ detectedVocabulary: [vocab] }} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-                {message.detectedVocabulary && <VocabularyCard message={message} />}
+                </Card>
               </motion.div>
             ))}
             <div ref={endRef} />
