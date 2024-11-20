@@ -52,7 +52,7 @@ export default function Navigation() {
       <Tooltip.Provider>
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <button className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F2CC8F] rounded-md" role="menuitem" onClick={() => window.location.href = "/"}>
+            <button className="flex items-center gap-2 text-primary-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-md" role="menuitem" onClick={() => window.location.href = "/"}>
               <MessageSquare className="h-5 w-5" aria-hidden="true" />
               <span>Chat</span>
             </button>
@@ -67,7 +67,7 @@ export default function Navigation() {
 
         <Tooltip.Root>
           <Tooltip.Trigger asChild>
-            <button className="flex items-center gap-2 text-white hover:text-[#F2CC8F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F2CC8F] rounded-md" role="menuitem" onClick={() => window.location.href = "/vocabulary"}>
+            <button className="flex items-center gap-2 text-primary-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-md" role="menuitem" onClick={() => window.location.href = "/vocabulary"}>
               <BookOpen className="h-5 w-5" aria-hidden="true" />
               <span>Vocabulary</span>
             </button>
@@ -84,18 +84,18 @@ export default function Navigation() {
   );
 
   return (
-    <header className="border-b bg-[#1B4965] sticky top-0 z-50">
+    <header className="border-b bg-primary sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <button onClick={() => window.location.href = "/"} className="text-2xl font-bold text-white hover:text-[#F2CC8F] transition-colors">
-            ¡Aprende!
+          <button onClick={() => window.location.href = "/"} className="text-2xl font-bold text-primary-foreground hover:text-accent transition-colors">
+            HablaFácil
           </button>
           
           {isMobile ? (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button
-                  className="rounded-full w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                  className="rounded-full w-10 h-10 flex items-center justify-center text-primary-foreground hover:bg-primary-foreground/10 transition-colors"
                   aria-label="Navigation menu"
                 >
                   <Menu className="h-6 w-6" />
