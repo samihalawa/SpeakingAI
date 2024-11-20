@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { VocabularyCard } from "./VocabularyCard";
+import { VocabularyCard } from "@/components/VocabularyCard";
 
 interface DetectedVocabulary {
   word: string;
