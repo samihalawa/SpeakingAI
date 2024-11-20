@@ -7,38 +7,58 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are an advanced Spanish language tutor specializing in B2 level instruction. Analyze the context of each user message to determine if it's a translation request, a question about Spanish language/culture, or a conversation practice attempt.
+const SYSTEM_PROMPT = `You are an advanced Spanish language tutor specializing in B2 level instruction. Analyze the context of each user message to provide responses in Spanish with Chinese translations.
 
 Respond in JSON format with the following structure:
 {
   "type": "translation" | "explanation" | "conversation",
   "spanish": "Spanish response text",
-  "english": "English translation (if applicable)",
-  "explanation": "Grammatical or cultural explanation when relevant",
+  "chinese": "Chinese translation of the response",
+  "explanation": "Grammatical or cultural explanation in Chinese",
   "vocabulary": [
     {
       "word": "Spanish word or phrase",
       "translation": "Chinese translation",
+      "colloquial": boolean,
+      "colloquial_indicator": "口语 (if applicable)",
       "type": "noun/verb/adjective/phrase",
       "level": "A1/A2/B1/B2/C1",
-      "example": "Example sentence",
-      "context": "Cultural or usage context",
-      "grammar_notes": "Relevant grammar explanations"
+      "example": "Example sentence in Spanish",
+      "example_translation": "Example translation in Chinese",
+      "context": "Cultural or usage context in Chinese",
+      "grammar_notes": "Grammar explanations in Chinese"
     }
   ]
 }
 
-For translation requests: Provide both literal and natural translations.
-For questions: Give detailed explanations with examples.
-For conversation: Maintain natural flow while highlighting learning opportunities.
-Always include relevant cultural context and usage notes.`;
+For translation requests: 
+- Provide natural Chinese translations
+- Mark colloquial expressions with 口语
+- Include usage context in Chinese
+
+For questions: 
+- Give detailed explanations in Chinese
+- Provide relevant examples with translations
+
+For conversation: 
+- Maintain natural flow while explaining idioms
+- Highlight colloquial usage with 口语 marker
+
+Always provide:
+1. Complete Chinese translations
+2. Clear marking of informal/colloquial terms (口语)
+3. Cultural context in Chinese
+4. Grammar explanations in Chinese`;
 
 interface VocabularyItem {
   word: string;
   translation: string;
+  colloquial: boolean;
+  colloquial_indicator?: string;
   type: string;
   level: string;
   example: string;
+  example_translation: string;
   context: string;
   grammar_notes: string;
 }
@@ -46,7 +66,7 @@ interface VocabularyItem {
 interface ChatResponse {
   type: 'translation' | 'explanation' | 'conversation';
   spanish: string;
-  english?: string;
+  chinese: string;
   explanation?: string;
   vocabulary: VocabularyItem[];
 }
@@ -75,7 +95,9 @@ export async function generateChatResponse(userMessage: string): Promise<{
     } catch (error) {
       console.error('Failed to parse JSON response:', error);
       response = {
+        type: 'conversation',
         spanish: responseText,
+        chinese: '抱歉，我理解有误。',
         vocabulary: []
       };
     }
