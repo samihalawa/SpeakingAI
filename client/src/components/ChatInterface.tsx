@@ -33,9 +33,9 @@ function toVocabularyItem(vocab: ChatVocabulary): VocabularyItem {
     word: vocab.word,
     translation: vocab.translation,
     usage_type: vocab.usage_type,
-    example: vocab.example,
-    example_translation: vocab.example_translation,
-    grammar_notes: vocab.grammar_notes,
+    example: vocab.example || '',
+    example_translation: vocab.example_translation || '',
+    grammar_notes: vocab.grammar_notes || '',
     lastReviewed: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -197,16 +197,20 @@ export function ChatInterface() {
                           <p className="text-sm font-medium">Vocabulary:</p>
                         </div>
                         <div className="grid gap-2">
-                          {message.detectedVocabulary.map((vocab, idx) => (
-                            <VocabularyCard
-                              key={`${vocab.word}-${idx}`}
-                              vocab={toVocabularyItem(vocab)}
-                              onCardClick={(vocab) => {
-                                // TODO: Handle vocabulary card click in next step
-                                console.log("Vocabulary clicked:", vocab);
-                              }}
-                            />
-                          ))}
+                          {message.detectedVocabulary.map((vocab, idx) => {
+                            console.log("Detected vocabulary:", vocab);
+                            const vocabItem = toVocabularyItem(vocab);
+                            console.log("Converted vocabulary item:", vocabItem);
+                            return (
+                              <VocabularyCard
+                                key={`${vocabItem.word}-${idx}`}
+                                vocab={vocabItem}
+                                onCardClick={(v) => {
+                                  console.log("Vocabulary clicked:", v);
+                                }}
+                              />
+                            );
+                          })}
                         </div>
                       </div>
                     )}
