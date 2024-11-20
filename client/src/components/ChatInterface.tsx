@@ -12,7 +12,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { VocabularyTooltip } from "./VocabularyTooltip";
 
 interface DetectedVocabulary {
   word: string;
@@ -51,8 +50,9 @@ export function ChatInterface() {
   const queryClient = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const { data: messages = [] } = useQuery({
+  const { data: messages = [] } = useQuery<Message[]>({
     queryKey: ["chat-messages"],
     queryFn: async () => {
       const response = await fetch("/api/chat/messages");
@@ -61,75 +61,101 @@ export function ChatInterface() {
     },
   });
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    const scrollToBottom = () => {
-      if (endRef.current) {
-        endRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
-    };
-    scrollToBottom();
-    const observer = new ResizeObserver(scrollToBottom);
-    if (scrollRef.current) {
-      observer.observe(scrollRef.current);
+    if (endRef.current) {
+      endRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-    return () => observer.disconnect();
   }, [messages]);
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
+      logChat.message("sent", content);
       const response = await fetch("/api/chat/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
       if (!response.ok) throw new Error("Failed to send message");
-      return response.json();
+      const data = await response.json();
+      logChat.message("received", data.response.content);
+      if (data.detectedVocabulary?.length > 0) {
+        logChat.vocabulary(data.detectedVocabulary);
+      }
+      return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chat-messages"] });
       setInput("");
-      if (data.detectedVocabulary?.length > 0) {
-        toast({
-          title: "New vocabulary detected",
-          description: `${data.detectedVocabulary.length} new words added to your vocabulary list`,
-        });
-      }
+    },
+    onError: (error) => {
+      logChat.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
     },
   });
 
+  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    setIsTyping(true);
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 1000);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      setIsTyping(false);
+      sendMessage.mutate(input);
+      // Scroll to bottom immediately when sending message
+      if (endRef.current) {
+        endRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full max-h-screen">
       <Card className="flex-1 flex flex-col overflow-hidden border-0 rounded-none">
-        <ScrollArea ref={scrollRef} className="flex-1 px-4">
-          <div className="max-w-2xl mx-auto py-4 space-y-4">
-            <AnimatePresence initial={false}>
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))}
-            </AnimatePresence>
-            <div ref={endRef} />
+        <ScrollArea className="flex-1 p-4">
+          <div className="space-y-4 max-w-2xl mx-auto">
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={cn(
+                  "flex gap-3 relative",
+                  message.role === "user" ? "justify-end" : "justify-start"
+                )}
+              >
+                <VocabularyCard message={message} />
+              </motion.div>
+            ))}
           </div>
         </ScrollArea>
-
+        
         <Separator />
         
         <div className="p-4">
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (input.trim()) sendMessage.mutate(input);
-          }} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex gap-2">
             <Input 
               placeholder="输入消息..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               className="flex-1"
-              disabled={sendMessage.isPending}
             />
-            <Button 
-              type="submit" 
-              size="icon"
-              disabled={sendMessage.isPending || !input.trim()}
-            >
+            <Button type="submit" size="icon">
               <Send className="h-4 w-4" />
             </Button>
           </form>
