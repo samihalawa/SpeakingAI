@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { sendWebSocketMessage } from "../lib/websocket";
 import { Input } from "@/components/ui/input";
@@ -11,9 +12,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 interface DetectedVocabulary {
   word: string;
   translation: string;
+  colloquial: boolean;
+  colloquial_indicator?: string;
   type: string;
   level: string;
   example: string;
+  example_translation: string;
   context: string;
   grammar_notes: string;
 }
@@ -99,73 +103,99 @@ export function ChatInterface() {
             }`}
           >
             <div className="space-y-2">
-              <p>{message.content}</p>
+              <div className="space-y-2">
+                {message.content.split('\n\n').map((part, index) => (
+                  <p
+                    key={index}
+                    className={`${
+                      index === 0 ? 'text-base' : 'text-sm text-gray-700'
+                    }`}
+                  >
+                    {part}
+                  </p>
+                ))}
+              </div>
               {message.role === "assistant" && message.detectedVocabulary && message.detectedVocabulary.length > 0 && (
                 <div className="text-sm mt-2 p-2 bg-accent/50 rounded">
                   <p className="font-semibold mb-1">New Vocabulary:</p>
-                  {message.detectedVocabulary?.map((vocab) => (
-                    <div
-                      key={vocab.word}
-                      className="flex items-center justify-between gap-2 mb-1 group relative"
-                    >
-                      <div
-                        className="hover:bg-accent/80 p-1 rounded cursor-help"
-                        data-tooltip-id={`tooltip-${vocab.word}`}
-                      >
-                        <span className="font-medium">{vocab.word}</span>
-                        <span className="mx-2">-</span>
-                        <span>{vocab.translation}</span>
+                  {message.detectedVocabulary?.map((vocab, index) => (
+                  <motion.div
+                    key={vocab.word}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.15 }}
+                    className="flex items-center justify-between gap-2 mb-1 group relative"
+                  >
+                      <div className="flex items-center justify-between w-full">
                         <div
-                          className="absolute hidden group-hover:block bg-white border p-2 rounded shadow-lg z-10 -top-2 left-full ml-2 w-80"
+                          className="hover:bg-accent/80 p-1 rounded cursor-help"
+                          data-tooltip-id={`tooltip-${vocab.word}`}
                         >
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <p className="font-medium text-primary">{vocab.type}</p>
-                              <span className="text-sm px-2 py-1 bg-accent rounded">{vocab.level}</span>
+                          <span className="font-medium">{vocab.word}</span>
+                          <span className="mx-2">-</span>
+                          <span>{vocab.translation}</span>
+                          <div
+                            className="absolute hidden group-hover:block bg-white border p-2 rounded shadow-lg z-10 -top-2 left-full ml-2 w-96"
+                          >
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-primary">{vocab.type}</p>
+                                  {vocab.colloquial && (
+                                    <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded">
+                                      {vocab.colloquial_indicator || '口语'}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-sm px-2 py-1 bg-accent rounded">{vocab.level}</span>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">{vocab.example}</p>
+                                <p className="text-sm text-gray-600">{vocab.example_translation}</p>
+                              </div>
+                              <p className="text-sm text-gray-600">{vocab.context}</p>
+                              <p className="text-sm text-gray-600">{vocab.grammar_notes}</p>
                             </div>
-                            <p className="text-sm">{vocab.example}</p>
-                            <p className="text-sm text-gray-600">{vocab.context}</p>
-                            <p className="text-sm text-gray-600">{vocab.grammar_notes}</p>
                           </div>
                         </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          const newVocab = {
-                            spanish: vocab.word,
-                            chinese: vocab.translation,
-                            example: vocab.example,
-                          };
-                          fetch("/api/vocabulary", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(newVocab),
-                          })
-                            .then((response) => response.json())
-                            .then((data) => {
-                              toast({
-                                title: "Success",
-                                description: "Word added to vocabulary",
-                              });
-                              sendWebSocketMessage({
-                                type: "vocabulary_update",
-                                item: data,
-                              });
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const newVocab = {
+                              spanish: vocab.word,
+                              chinese: vocab.translation,
+                              example: vocab.example,
+                            };
+                            fetch("/api/vocabulary", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify(newVocab),
                             })
-                            .catch(() => {
-                              toast({
-                                title: "Error",
-                                description: "Failed to add word",
-                                variant: "destructive",
+                              .then((response) => response.json())
+                              .then((data) => {
+                                toast({
+                                  title: "Success",
+                                  description: "Word added to vocabulary",
+                                });
+                                sendWebSocketMessage({
+                                  type: "vocabulary_update",
+                                  item: data,
+                                });
+                              })
+                              .catch(() => {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to add word",
+                                  variant: "destructive",
+                                });
                               });
-                            });
-                        }}
-                      >
-                        Add to Vocabulary
-                      </Button>
-                    </div>
+                          }}
+                        >
+                          Add to Vocabulary
+                        </Button>
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
