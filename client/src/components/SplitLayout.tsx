@@ -55,34 +55,7 @@ export function SplitLayout() {
     <IonPage>
       <IonContent>
         <div className="h-full">
-          <div className="flex justify-center p-4 bg-background border-b">
-            <ToggleGroup.Root
-              type="single"
-              value={activeView}
-              onValueChange={(value) => value && setActiveView(value as "chat" | "vocabulary")}
-              className="inline-flex bg-muted p-1 rounded-lg gap-1"
-              aria-label="View options"
-            >
-              <ToggleGroup.Item
-                value="chat"
-                aria-label="Chat view"
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  activeView === "chat" ? "bg-primary text-primary-foreground" : "hover:bg-muted-foreground/10"
-                }`}
-              >
-                Chat
-              </ToggleGroup.Item>
-              <ToggleGroup.Item
-                value="vocabulary"
-                aria-label="Vocabulary view"
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  activeView === "vocabulary" ? "bg-primary text-primary-foreground" : "hover:bg-muted-foreground/10"
-                }`}
-              >
-                Vocabulary
-              </ToggleGroup.Item>
-            </ToggleGroup.Root>
-          </div>
+          {/* Navigation is handled through the dropdown menu in Navigation.tsx */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeView}
