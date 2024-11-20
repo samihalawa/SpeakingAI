@@ -211,11 +211,12 @@ export function ChatInterface() {
                                         title: "Success",
                                         description: (
                                           <motion.div
-                                            initial={{ opacity: 0, scale: 0.9 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            className="text-green-600"
+                                            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="text-green-600 flex items-center gap-2"
                                           >
-                                            Word added to vocabulary successfully!
+                                            <span>Word added to vocabulary successfully!</span>
                                           </motion.div>
                                         ),
                                       });
@@ -238,31 +239,48 @@ export function ChatInterface() {
                                 Add to Vocabulary
                               </Button>
                             </div>
-                            <div className="mt-2 p-2 bg-accent/10 rounded-md">
-                              <div className="flex flex-col gap-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{vocab.type}</span>
-                                  {vocab.colloquial && (
-                                    <span className="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs">
-                                      {vocab.colloquial_indicator || '口语'}
+                            <motion.div 
+                                initial={{ opacity: 0, y: -5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="mt-2 p-2 bg-accent/10 rounded-md shadow-sm"
+                              >
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-sm">{vocab.type}</span>
+                                    {vocab.colloquial && (
+                                      <span className="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs">
+                                        {vocab.colloquial_indicator || '口语'}
+                                      </span>
+                                    )}
+                                    <span className="px-2 py-0.5 bg-accent text-accent-foreground rounded text-xs">
+                                      {vocab.level}
                                     </span>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <p className="italic text-sm">{vocab.example}</p>
+                                    <p className="text-muted-foreground text-xs">{vocab.example_translation}</p>
+                                  </div>
+                                  {vocab.context && (
+                                    <motion.p 
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      className="text-muted-foreground text-xs"
+                                    >
+                                      {vocab.context}
+                                    </motion.p>
                                   )}
-                                  <span className="px-2 py-0.5 bg-accent text-accent-foreground rounded text-xs">
-                                    {vocab.level}
-                                  </span>
+                                  {vocab.grammar_notes && (
+                                    <motion.p 
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      className="text-muted-foreground text-xs border-l-2 border-accent pl-2"
+                                    >
+                                      {vocab.grammar_notes}
+                                    </motion.p>
+                                  )}
                                 </div>
-                                <div>
-                                  <p className="italic">{vocab.example}</p>
-                                  <p className="text-muted-foreground">{vocab.example_translation}</p>
-                                </div>
-                                {vocab.context && (
-                                  <p className="text-muted-foreground">{vocab.context}</p>
-                                )}
-                                {vocab.grammar_notes && (
-                                  <p className="text-muted-foreground">{vocab.grammar_notes}</p>
-                                )}
-                              </div>
-                            </div>
+                              </motion.div>
                           </div>
                         </motion.div>
                       ))}
