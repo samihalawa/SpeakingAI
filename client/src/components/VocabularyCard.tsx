@@ -35,14 +35,16 @@ export function VocabularyCard({ message }: VocabularyCardProps) {
     mutationFn: async (vocabulary: DetectedVocabulary) => {
       const response = await fetch("/api/vocabulary", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json; charset=utf-8"
+        },
         body: JSON.stringify({
           spanish: vocabulary.word,
           chinese: vocabulary.translation,
-          example: vocabulary.example,
-          notes: vocabulary.grammar_notes,
-          type: vocabulary.type,
-          level: vocabulary.level
+          example: `${vocabulary.example}\n${vocabulary.example_translation}`,
+          notes: `用法: ${vocabulary.usage_type}\n解释: ${vocabulary.explanation}\n语法: ${vocabulary.grammar_notes}`,
+          wordType: vocabulary.usage_type === '正式' ? 'formal' : vocabulary.usage_type === '口语' ? 'colloquial' : 'idiom',
+          difficulty: 'intermediate'
         }),
       });
       if (!response.ok) throw new Error("Failed to add vocabulary");
