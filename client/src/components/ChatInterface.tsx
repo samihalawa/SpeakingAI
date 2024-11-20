@@ -43,10 +43,12 @@ const logChat = {
 
 export function ChatInterface() {
   const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   const { data: messages = [] } = useQuery<Message[]>({
     queryKey: ["chat-messages"],
@@ -94,9 +96,23 @@ export function ChatInterface() {
     },
   });
 
+  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    setIsTyping(true);
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 1000);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
+      setIsTyping(false);
       sendMessage.mutate(input);
       // Scroll to bottom immediately when sending message
       if (endRef.current) {
@@ -164,13 +180,34 @@ export function ChatInterface() {
                         >
                           <div className="relative">
                             <div className="flex items-center justify-between">
-                              <div className="p-2 bg-background rounded-md cursor-help">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{vocab.word}</span>
-                                  <span>-</span>
-                                  <span>{vocab.translation}</span>
-                                </div>
-                              </div>
+                              <Tooltip.Provider>
+                                <Tooltip.Root delayDuration={200}>
+                                  <Tooltip.Trigger asChild>
+                                    <motion.div 
+                                      className="p-2 bg-background rounded-md cursor-help"
+                                      whileHover={{ scale: 1.02 }}
+                                      transition={{ duration: 0.2 }}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium">{vocab.word}</span>
+                                        <span>-</span>
+                                        <span>{vocab.translation}</span>
+                                      </div>
+                                    </motion.div>
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Portal>
+                                    <Tooltip.Content 
+                                      className="bg-popover text-popover-foreground px-3 py-1.5 rounded-md text-sm shadow-md"
+                                      side="top"
+                                      sideOffset={5}
+                                    >
+                                      <p className="font-medium">Grammar Notes:</p>
+                                      <p className="text-xs mt-1">{vocab.grammar_notes}</p>
+                                      <Tooltip.Arrow className="fill-popover"/>
+                                    </Tooltip.Content>
+                                  </Tooltip.Portal>
+                                </Tooltip.Root>
+                              </Tooltip.Provider>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -297,12 +334,26 @@ export function ChatInterface() {
       <div className="p-4 border-t">
         <form onSubmit={handleSubmit}>
           <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1"
-            />
+            <div className="flex-1 relative">
+              <Input
+                value={input}
+                onChange={handleTyping}
+                placeholder="Type your message..."
+                className="w-full"
+              />
+              <AnimatePresence>
+                {isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute -top-6 left-2 text-xs text-muted-foreground"
+                  >
+                    Typing...
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <Button 
               disabled={sendMessage.isPending}
               type="submit"
