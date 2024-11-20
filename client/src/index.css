@@ -1,9 +1,9 @@
+@import '@radix-ui/themes/styles.css';
+@import './styles/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import '@radix-ui/themes/styles.css';
-@import './styles/theme.css';
 
 @layer base {
   :root {
