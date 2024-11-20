@@ -156,19 +156,29 @@ export function ChatInterface() {
       </Card>
       
       <div className="sticky bottom-0 w-full bg-background border-t z-50 shadow-lg">
-        <form onSubmit={handleSubmit} className="px-4 py-3 sm:py-4 flex gap-2 max-w-2xl mx-auto items-center">
-          <Input 
-            placeholder="输入消息..."
-            value={input}
-            onChange={handleTyping}
-            disabled={sendMessage.isPending}
-            className="flex-1 min-w-0 h-10 sm:h-11"
-          />
+        <form onSubmit={handleSubmit} className="px-2 sm:px-4 py-2 sm:py-4 flex gap-2 max-w-2xl mx-auto items-end">
+          <div className="flex-1 min-w-0">
+            <Input 
+              placeholder="输入消息..."
+              value={input}
+              onChange={handleTyping}
+              disabled={sendMessage.isPending}
+              className={cn(
+                "resize-none min-h-[40px] max-h-[200px] w-full transition-all duration-200",
+                "sm:min-h-[44px] sm:text-base text-sm py-2 px-3",
+                "focus:ring-2 focus:ring-primary",
+                isTyping ? "h-[80px] sm:h-[100px]" : "h-[40px] sm:h-[44px]"
+              )}
+            />
+          </div>
           <Button 
             type="submit" 
             size="icon" 
             disabled={sendMessage.isPending}
-            className="shrink-0 h-10 sm:h-11 w-10 sm:w-11"
+            className={cn(
+              "shrink-0 transition-all duration-200",
+              isTyping ? "h-[80px] sm:h-[100px] w-[50px] sm:w-[60px]" : "h-[40px] sm:h-[44px] w-[40px] sm:w-[44px]"
+            )}
           >
             {sendMessage.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
