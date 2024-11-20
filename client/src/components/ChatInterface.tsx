@@ -17,13 +17,10 @@ import { VocabularyCard } from "@/components/VocabularyCard";
 interface DetectedVocabulary {
   word: string;
   translation: string;
-  colloquial: boolean;
-  colloquial_indicator?: string;
-  type: string;
-  level: string;
+  usage_type: '正式' | '口语' | '习语';
+  explanation: string;
   example: string;
   example_translation: string;
-  context: string;
   grammar_notes: string;
 }
 
@@ -32,6 +29,7 @@ interface Message {
   content: string;
   role: "user" | "assistant";
   detectedVocabulary: DetectedVocabulary[] | null;
+  explanation?: string;
   timestamp?: string;
 }
 
