@@ -17,17 +17,38 @@ test.describe('Spanish Learning Platform Tests', () => {
     expect(linkTexts.filter(Boolean)).toContain('Vocabulary');
   });
 
-  test('should send and receive chat messages', async ({ request }) => {
+  test('should send and receive chat messages with vocabulary detection', async ({ page, request }) => {
+    const testMessage = "hola kitty. era para decirte un poco del problem'on que tengo encima";
+    
+    // Send message via API
     const response = await request.post('/api/chat/send', {
-      data: {
-        content: 'Hola, ¿cómo estás?'
-      }
+      data: { content: testMessage }
     });
     expect(response.ok()).toBeTruthy();
     
     const data = await response.json();
     expect(data.message).toBeDefined();
     expect(data.response).toBeDefined();
+    expect(data.detectedVocabulary).toBeDefined();
+    
+    // Test UI interaction and animations
+    await page.goto('/');
+    const input = await page.getByPlaceholder('Type your message...');
+    await input.fill(testMessage);
+    await page.getByRole('button', { name: 'Send' }).click();
+    
+    // Wait for response and check vocabulary items
+    await page.waitForSelector('.bg-accent/50');
+    const vocabItems = await page.$$('.bg-accent/50 motion.div');
+    expect(vocabItems.length).toBeGreaterThan(0);
+    
+    // Check animation classes
+    const firstVocabItem = vocabItems[0];
+    const hasAnimation = await firstVocabItem.evaluate(el => {
+      const style = window.getComputedStyle(el);
+      return style.opacity !== '0' && style.transform !== 'translateY(20px)';
+    });
+    expect(hasAnimation).toBeTruthy();
   });
 
   test('should manage vocabulary items', async ({ request }) => {
