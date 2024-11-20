@@ -43,31 +43,19 @@ async function createProject() {
 
 async function deployToCloudflarePages() {
   try {
-    if (!process.env.CLOUDFLARE_API_TOKEN || !process.env.CLOUDFLARE_ACCOUNT_ID) {
-      throw new Error('Missing required Cloudflare credentials');
-    }
-
-    // Clean the dist directory
-    console.log('Cleaning build directory...');
-    execSync('rm -rf dist', { stdio: 'inherit' });
-
-    // Build the project
+    // First, build the project
     console.log('Building the project...');
     execSync('npm run build', { stdio: 'inherit' });
     
     console.log('Deploying to Cloudflare Pages...');
-    
-    // Set environment variables for Wrangler
-    const env = {
-      ...process.env,
-      CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
-      CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN
-    };
-
-    // Direct deployment command with all necessary flags
-    execSync('npx wrangler pages publish dist/public --project-name samito --branch main --commit-dirty=true --commit-hash=$(git rev-parse HEAD) --yes', {
+    // Deploy using wrangler with production flag
+    execSync('npx wrangler pages publish dist/public --project-name=samito --branch=main --production', {
       stdio: 'inherit',
-      env
+      env: {
+        ...process.env,
+        CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
+        CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID
+      }
     });
 
     console.log('Deployment completed successfully');
