@@ -14,14 +14,27 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { VocabularyCard } from "@/components/VocabularyCard";
 
-interface DetectedVocabulary {
+import { VocabularyItem } from "@/types/vocabulary";
+
+interface ChatVocabulary {
   word: string;
   translation: string;
-  usage_type: '正式' | '口语' | '习语';
-  explanation: string;
-  example: string;
-  example_translation: string;
-  grammar_notes: string;
+  usage_type: '正式' | '口语' | '书面';
+  example?: string;
+  example_translation?: string;
+  grammar_notes?: string;
+  explanation?: string;
+}
+
+// Helper function to convert ChatVocabulary to VocabularyItem
+function toVocabularyItem(vocab: ChatVocabulary): VocabularyItem {
+  return {
+    ...vocab,
+    id: `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    lastReviewed: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 }
 
 interface Message {
@@ -30,7 +43,7 @@ interface Message {
   content: string;
   translation?: string;
   explanation?: string;
-  detectedVocabulary?: DetectedVocabulary[];
+  detectedVocabulary?: ChatVocabulary[];
   examples?: string[];
   input_language?: "chinese" | "spanish";
   timestamp?: string;
@@ -182,10 +195,10 @@ export function ChatInterface() {
                           {message.detectedVocabulary.map((vocab, idx) => (
                             <VocabularyCard
                               key={`${vocab.word}-${idx}`}
-                              message={{
-                                content: "",
-                                role: "assistant",
-                                detectedVocabulary: [vocab]
+                              vocab={toVocabularyItem(vocab)}
+                              onCardClick={(vocab) => {
+                                // TODO: Handle vocabulary card click in next step
+                                console.log("Vocabulary clicked:", vocab);
                               }}
                             />
                           ))}
