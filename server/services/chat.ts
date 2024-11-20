@@ -7,17 +7,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are an advanced Spanish language tutor for Chinese speakers at B2 level. Detect the input language and respond accordingly:
+const SYSTEM_PROMPT = `You are an advanced Spanish language tutor for Chinese speakers. Detect the input language and respond accordingly:
 
 For Chinese input:
 - Translate to natural Spanish
-- Highlight B2+ level vocabulary in the translation
+- Identify challenging vocabulary and expressions
 - Explain in Chinese why certain phrases might be challenging
 - Provide example sentences for complex terms
 
 For Spanish input:
 - Provide accurate Chinese translation
-- Identify and explain B2+ level vocabulary
+- Identify important vocabulary and expressions
 - Include colloquial/formal usage notes in Chinese
 - Give example sentences with Chinese translations
 
@@ -25,29 +25,27 @@ Respond in JSON format:
 {
   "input_language": "chinese" | "spanish",
   "translation": "Translation in target language",
-  "explanation": "Explanation in Chinese about translation choices",
+  "explanation": "解释翻译选择的原因和难点",
   "vocabulary": [
     {
       "word": "Spanish word/phrase",
-      "translation": "Chinese translation",
-      "level": "B1/B2/C1",
-      "usage_type": "formal/colloquial/idiomatic",
-      "explanation": "Detailed explanation in Chinese",
-      "example": "Example sentence in Spanish",
-      "example_translation": "Example translation in Chinese",
-      "grammar_notes": "Grammar explanations in Chinese"
+      "translation": "中文翻译",
+      "usage_type": "正式/口语/习语",
+      "explanation": "详细的中文解释",
+      "example": "Spanish example sentence",
+      "example_translation": "例句中文翻译",
+      "grammar_notes": "语法要点中文说明"
     }
   ]
 }
 
-Focus on vocabulary and expressions that B2 learners typically struggle with.
-Always explain in Chinese why certain expressions are challenging.`;
+Focus on explaining why expressions are challenging and provide detailed Chinese explanations.
+All explanations must be in Chinese.`;
 
 interface VocabularyItem {
   word: string;
   translation: string;
-  level: string;
-  usage_type: 'formal' | 'colloquial' | 'idiomatic';
+  usage_type: '正式' | '口语' | '习语';
   explanation: string;
   example: string;
   example_translation: string;
@@ -104,6 +102,31 @@ export async function generateChatResponse(userMessage: string): Promise<{
     
     // Filter out existing vocabulary
     const newVocabulary = response.vocabulary.filter(v => !existingWords.has(v.word.toLowerCase()));
+
+    // Automatically add new vocabulary items to the database
+    if (newVocabulary.length > 0) {
+      const vocabToAdd = newVocabulary.map(v => ({
+        spanish: v.word,
+        chinese: v.translation,
+        example: v.example,
+        notes: `${v.explanation}\n\n用法：${v.usage_type}\n语法：${v.grammar_notes}`
+      }));
+
+      try {
+        const addedItems = await db
+          .insert(vocabularyItems)
+          .values(vocabToAdd)
+          .returning();
+
+        // Send WebSocket update for new vocabulary items
+        process.send?.({ 
+          type: 'vocabulary_update',
+          items: addedItems
+        });
+      } catch (error) {
+        console.error('Error adding vocabulary items:', error);
+      }
+    }
 
     // Enhanced logging for debugging
     console.log('Chat processing:', {
