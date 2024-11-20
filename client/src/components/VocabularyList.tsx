@@ -7,11 +7,13 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Filter } from "lucide-react"
-import { motion } from "framer-motion"
+import { Edit2, Trash2 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { VocabularyDialog } from "@/components/ui/VocabularyDialog"
+import { VocabularySearch } from "@/components/VocabularySearch"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { filterVocabulary } from "@/lib/vocabulary"
 
 interface VocabularyItem {
   id: string;
@@ -24,8 +26,11 @@ interface VocabularyItem {
 
 export function VocabularyList() {
   const [selectedItem, setSelectedItem] = useState<VocabularyItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<'spanish' | 'chinese' | 'lastReviewed'>('spanish');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const { data: vocabularyItems = [] } = useQuery<VocabularyItem[]>({
+  const { data: vocabularyItems = [], refetch } = useQuery<VocabularyItem[]>({
     queryKey: ["vocabulary"],
     queryFn: async () => {
       const response = await fetch("/api/vocabulary");
@@ -33,24 +38,40 @@ export function VocabularyList() {
       return response.json();
     },
   });
+
+  const filteredItems = filterVocabulary({
+    searchTerm,
+    sortBy,
+    sortOrder,
+  });
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/vocabulary/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete vocabulary item');
+      refetch();
+    } catch (error) {
+      console.error('Error deleting vocabulary item:', error);
+    }
+  };
   return (
     <Card className="h-full flex flex-col overflow-hidden border-0 rounded-none">
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">词汇表</h2>
-          <Button variant="ghost" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            筛选
-          </Button>
-        </div>
-      </div>
+      <VocabularySearch 
+        onSearch={setSearchTerm}
+        onSortChange={(sortBy, order) => {
+          setSortBy(sortBy as 'spanish' | 'chinese' | 'lastReviewed');
+          setSortOrder(order);
+        }}
+      />
 
       <ScrollArea className="flex-1 p-4">
         <motion.div 
           layout
           className="space-y-2"
         >
-          {vocabularyItems.map((item) => (
+          {filteredItems.map((item) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -67,7 +88,31 @@ export function VocabularyList() {
                           {item.chinese}
                         </p>
                       </div>
-                      <Badge>{item.type}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge>{item.type}</Badge>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedItem(item);
+                            }}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(item.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </Card>
                 </HoverCardTrigger>
