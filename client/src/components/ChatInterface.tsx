@@ -10,6 +10,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 interface DetectedVocabulary {
   word: string;
   translation: string;
+  type: string;
+  example: string;
 }
 
 interface Message {
@@ -96,11 +98,63 @@ export function ChatInterface() {
               <p>{message.content}</p>
               {message.role === "assistant" && message.detectedVocabulary && message.detectedVocabulary.length > 0 && (
                 <div className="text-sm mt-2 p-2 bg-accent/50 rounded">
-                  <p className="font-semibold mb-1">Vocabulary:</p>
-                  {message.detectedVocabulary?.map(({ word, translation }) => (
-                    <p key={word} className="text-sm">
-                      {word} - {translation}
-                    </p>
+                  <p className="font-semibold mb-1">New Vocabulary:</p>
+                  {message.detectedVocabulary?.map((vocab) => (
+                    <div
+                      key={vocab.word}
+                      className="flex items-center justify-between gap-2 mb-1 group relative"
+                    >
+                      <div
+                        className="hover:bg-accent/80 p-1 rounded cursor-help"
+                        data-tooltip-id={`tooltip-${vocab.word}`}
+                      >
+                        <span className="font-medium">{vocab.word}</span>
+                        <span className="mx-2">-</span>
+                        <span>{vocab.translation}</span>
+                        <div
+                          className="absolute hidden group-hover:block bg-white border p-2 rounded shadow-lg z-10 -top-2 left-full ml-2 w-64"
+                        >
+                          <p className="font-medium text-primary">{vocab.type}</p>
+                          <p className="text-sm mt-1">{vocab.example}</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const newVocab = {
+                            spanish: vocab.word,
+                            chinese: vocab.translation,
+                            example: vocab.example,
+                          };
+                          fetch("/api/vocabulary", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(newVocab),
+                          })
+                            .then((response) => response.json())
+                            .then((data) => {
+                              toast({
+                                title: "Success",
+                                description: "Word added to vocabulary",
+                              });
+                              sendWebSocketMessage({
+                                type: "vocabulary_update",
+                                item: data,
+                              });
+                            })
+                            .catch(() => {
+                              toast({
+                                title: "Error",
+                                description: "Failed to add word",
+                                variant: "destructive",
+                              });
+                            });
+                        }}
+                      >
+                        Add to Vocabulary
+                      </Button>
+                    </div>
                   ))}
                 </div>
               )}
