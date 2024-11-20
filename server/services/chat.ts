@@ -64,6 +64,22 @@ export async function generateChatResponse(userMessage: string): Promise<{
   explanation?: string;
   detectedVocabulary: VocabularyItem[];
 }> {
+  // Validate input message
+  if (!userMessage || userMessage.trim().length === 0) {
+    throw new Error('Message content cannot be empty');
+  }
+
+  if (userMessage.length > 1000) {
+    throw new Error('Message content is too long (max 1000 characters)');
+  }
+
+  // Check if the message contains valid UTF-8 characters
+  try {
+    decodeURIComponent(encodeURIComponent(userMessage));
+  } catch (error) {
+    throw new Error('Message contains invalid characters');
+  }
+
   try {
     const completion = await openai.chat.completions.create({
       messages: [
@@ -166,12 +182,21 @@ export async function generateChatResponse(userMessage: string): Promise<{
       existingVocabularyCount: response.vocabulary.length - newVocabulary.length,
     });
 
-    // Construct the display content with Chinese translation
-    let content = response.translation;
+    // Sanitize and construct the display content with Chinese translation
+    let content = '';
     
-    // Add explanation after translation
-    if (response.explanation) {
-      content += `\n\n${response.explanation}`;
+    try {
+      // Ensure proper encoding of translation
+      content = decodeURIComponent(encodeURIComponent(response.translation));
+      
+      // Add explanation after translation if available
+      if (response.explanation) {
+        const sanitizedExplanation = decodeURIComponent(encodeURIComponent(response.explanation));
+        content += `\n\n${sanitizedExplanation}`;
+      }
+    } catch (error) {
+      console.error('Error sanitizing response content:', error);
+      throw new Error('Failed to process response content');
     }
 
     return {
