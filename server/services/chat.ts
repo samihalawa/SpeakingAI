@@ -70,22 +70,49 @@ export async function generateChatResponse(userMessage: string): Promise<{
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userMessage }
       ],
-      model: 'gpt-3.5-turbo',
+      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: 'gpt-4o',
       temperature: 0.7,
-      max_tokens: 300,
+      max_tokens: 500,
+      response_format: { type: "json_object" },
     });
 
-    const responseText = completion.choices[0]?.message?.content || '{"spanish": "Lo siento, no entiendo.", "vocabulary": []}';
+    const responseText = completion.choices[0]?.message?.content;
+    
+    if (!responseText) {
+      throw new Error('No response received from OpenAI');
+    }
+    
     let response: ChatResponse;
     
     try {
+      // Since we use response_format: "json_object", this should always be valid JSON
       response = JSON.parse(responseText);
+      
+      // Validate response structure
+      if (!response.input_language || !response.translation || !Array.isArray(response.vocabulary)) {
+        throw new Error('Invalid response structure');
+      }
+      
+      // Ensure all strings are properly encoded for Chinese characters
+      response.translation = decodeURIComponent(encodeURIComponent(response.translation));
+      response.explanation = response.explanation ? 
+        decodeURIComponent(encodeURIComponent(response.explanation)) : '';
+      
+      response.vocabulary = response.vocabulary.map(item => ({
+        ...item,
+        translation: decodeURIComponent(encodeURIComponent(item.translation)),
+        explanation: decodeURIComponent(encodeURIComponent(item.explanation)),
+        example_translation: decodeURIComponent(encodeURIComponent(item.example_translation)),
+        grammar_notes: decodeURIComponent(encodeURIComponent(item.grammar_notes))
+      }));
+      
     } catch (error) {
-      console.error('Failed to parse JSON response:', error);
+      console.error('Failed to parse or process JSON response:', error);
       response = {
         input_language: 'chinese',
-        translation: responseText,
-        explanation: '抱歉，我理解有误。',
+        translation: '对不起，系统暂时无法处理您的请求。',
+        explanation: '系统错误，请稍后再试。',
         vocabulary: []
       };
     }
