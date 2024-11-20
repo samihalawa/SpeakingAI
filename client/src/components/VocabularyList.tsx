@@ -100,8 +100,23 @@ export function VocabularyList() {
   const rowVirtualizer = useVirtualizer({
     count: filteredVocabulary.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 50,
-    overscan: 5,
+    estimateSize: (index) => {
+      const item = filteredVocabulary[index];
+      // Base height for the row
+      let height = 60;
+      // Add height for example
+      if (item?.example) height += 40;
+      // Add height for notes
+      if (item?.notes) height += 40;
+      // Add height for tags if present
+      if (item?.tags?.length) height += 30;
+      return height;
+    },
+    overscan: 10,
+    measureElement: (element) => {
+      // Get the actual rendered height of the element
+      return element.getBoundingClientRect().height;
+    }
   });
 
   if (isLoading) {
@@ -211,16 +226,49 @@ export function VocabularyList() {
                 >
                   <TableCell className="font-medium">
                     <Collapsible>
-                      <CollapsibleTrigger className="flex items-center gap-2">
-                        <span>{item.spanish}</span>
-                        <ChevronDown className="h-4 w-4" />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="pt-2">
-                        <p className="text-sm text-muted-foreground">{item.example}</p>
-                        {item.notes && (
-                          <p className="text-sm text-muted-foreground mt-1">{item.notes}</p>
-                        )}
-                      </CollapsibleContent>
+                      {({ open }) => (
+                        <>
+                          <CollapsibleTrigger className="flex items-center gap-2 w-full transition-all duration-200 hover:bg-accent/10 rounded px-2 py-1">
+                            <span>{item.spanish}</span>
+                            {open ? (
+                              <ChevronUp className="h-4 w-4 transition-transform duration-200" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                            )}
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="pt-2 space-y-2 animate-accordion-down">
+                            {item.example && (
+                              <div className="pl-2 border-l-2 border-primary/20">
+                                <p className="text-sm text-muted-foreground">{item.example}</p>
+                              </div>
+                            )}
+                            {item.notes && (
+                              <div className="pl-2 border-l-2 border-primary/20">
+                                <p className="text-sm text-muted-foreground">{item.notes}</p>
+                              </div>
+                            )}
+                            <div className="flex gap-2 pt-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs"
+                                onClick={() => {
+                                  const now = new Date().toISOString();
+                                  fetch(`/api/vocabulary/${item.id}/review`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ lastReviewed: now })
+                                  }).then(() => {
+                                    queryClient.invalidateQueries({ queryKey: ['vocabulary'] });
+                                  });
+                                }}
+                              >
+                                Mark as Reviewed
+                              </Button>
+                            </div>
+                          </CollapsibleContent>
+                        </>
+                      )}
                     </Collapsible>
                   </TableCell>
                   <TableCell>{item.chinese}</TableCell>
