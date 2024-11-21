@@ -64,111 +64,59 @@
 
     <!-- Main Content -->
     <main class="flex flex-1">
-      <!-- Chat Section -->
-      <section class="w-full md:w-2/3 p-4 flex flex-col">
-        <div class="flex-1 overflow-y-auto mb-4" ref="chatContainer">
-          <div v-for="message in messages" :key="message.id" class="mb-2">
-            <div :class="{'text-right': message.sender === 'user', 'text-left': message.sender === 'ai'}">
-              <div :class="message.sender === 'user' ? 'bg-orange-200 dark:bg-orange-700' : 'bg-blue-200 dark:bg-blue-700'"
-                   class="inline-block p-2 rounded max-w-full break-words">
-                <p v-html="message.content"></p>
-              </div>
-            </div>
+      <chat-view 
+        :messages="messages"
+        :user-input="userInput"
+      >
+        <template #input>
+          <div class="flex">
+            <input v-model="userInput" @keyup.enter="sendMessage" 
+                   class="flex-1 p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="Escribe tu mensaje..." aria-label="Input de chat">
+            <button @click="sendMessage" 
+                    class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    aria-label="Enviar mensaje">
+              Enviar
+            </button>
           </div>
-        </div>
-        <!-- Input -->
-        <div class="flex">
-          <input v-model="userInput" @keyup.enter="sendMessage" class="flex-1 p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
-                 placeholder="Escribe tu mensaje..." aria-label="Input de chat">
-          <button @click="sendMessage" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Enviar mensaje">
-            Enviar
-          </button>
-        </div>
-        <!-- Upload Buttons -->
-        <div class="mt-2 flex space-x-2">
-          <!-- Image Upload -->
-          <input type="file" @change="handleImageUpload" accept="image/*" class="hidden" ref="imageInput">
-          <button @click="$refs.imageInput.click()" class="btn btn-success" aria-label="Subir Imagen">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none"
-                 viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 5a2 2 0 012-2h3.586a2 2 0 011.414.586L12 7l1.586-1.414A2 2 0 0116.414 5H20a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" />
-            </svg>
-            Imagen
-          </button>
-          <!-- Audio Upload -->
-          <input type="file" @change="handleAudioUpload" accept="audio/*" class="hidden" ref="audioInput">
-          <button @click="$refs.audioInput.click()" class="btn btn-warning" aria-label="Subir Audio">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none"
-                 viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 15v4m0-4a3 3 0 100-6 3 3 0 000 6zm0 0v-3m0 3h.01M19.07 4.93a10 10 0 11-14.14 0 10 10 0 0114.14 0z" />
-            </svg>
-            Audio
-          </button>
-        </div>
-      </section>
+        </template>
+        <template #upload-buttons>
+          <div class="mt-2 flex space-x-2">
+            <input type="file" @change="handleImageUpload" accept="image/*" 
+                   class="hidden" ref="imageInput">
+            <button @click="$refs.imageInput.click()" class="btn btn-success" 
+                    aria-label="Subir Imagen">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none"
+                   viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 5a2 2 0 012-2h3.586a2 2 0 011.414.586L12 7l1.586-1.414A2 2 0 0116.414 5H20a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" />
+              </svg>
+              Imagen
+            </button>
+            <input type="file" @change="handleAudioUpload" accept="audio/*" 
+                   class="hidden" ref="audioInput">
+            <button @click="$refs.audioInput.click()" class="btn btn-warning" 
+                    aria-label="Subir Audio">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none"
+                   viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 15v4m0-4a3 3 0 100-6 3 3 0 000 6zm0 0v-3m0 3h.01M19.07 4.93a10 10 0 11-14.14 0 10 10 0 0114.14 0z" />
+              </svg>
+              Audio
+            </button>
+          </div>
+        </template>
+      </chat-view>
 
-      <!-- Vocabulary Section -->
-      <aside class="hidden md:block w-1/3 p-4 bg-gray-100 dark:bg-gray-800 border-l overflow-y-auto">
-        <h2 class="text-xl font-bold mb-4">Lista de Vocabulario</h2>
-        <!-- Search and Filters -->
-        <div class="mb-4">
-          <input v-model="searchQuery" class="input input-bordered w-full mb-2" placeholder="Buscar vocabulario..." aria-label="Buscar vocabulario">
-          <select v-model="filterType" class="select select-bordered w-full" aria-label="Filtrar por tipo">
-            <option value="">Todos los tipos</option>
-            <option value="word">Palabras</option>
-            <option value="idiom">Modismos</option>
-            <option value="expression">Expresiones</option>
-          </select>
-        </div>
-        <!-- Vocabulary List -->
-        <div>
-          <transition-group name="fade" tag="div">
-            <div v-for="word in filteredVocabulary" :key="word.id" class="mb-4 p-2 bg-white dark:bg-gray-700 rounded shadow">
-              <div class="flex justify-between items-center">
-                <h3 class="font-bold text-lg">{{ word.spanish }}</h3>
-                <div class="flex space-x-2">
-                  <button @click="copyToClipboard(word)" class="btn btn-xs btn-ghost" aria-label="Copiar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M16 8l6 6-6 6" />
-                    </svg>
-                  </button>
-                  <button @click="editVocabulary(word)" class="btn btn-xs btn-ghost" aria-label="Editar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15.232 5.232l3.536 3.536M9.354 15.536L4.464 20.426a2 2 0 01-2.828-2.828L7.05 12.05a2 2 0 012.828 0l4.95 4.95a2 2 0 01-.001 2.828z" />
-                    </svg>
-                  </button>
-                  <button @click="deleteVocabulary(word.id)" class="btn btn-xs btn-ghost text-red-500" aria-label="Eliminar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <p class="text-gray-600 dark:text-gray-300">{{ word.chinese }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Añadido: {{ word.timestamp }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Tipo: {{ capitalize(word.type) }}</p>
-              <ul class="list-disc ml-4 mt-2">
-                <li v-for="(example, index) in word.examples" :key="index">{{ example }}</li>
-              </ul>
-              <!-- Custom Tags -->
-              <div class="mt-2">
-                <span v-for="tag in word.tags" :key="tag" class="badge badge-primary mr-1">{{ tag }}</span>
-                <button @click="addTag(word)" class="btn btn-xs btn-outline ml-2" aria-label="Añadir etiqueta">+</button>
-              </div>
-            </div>
-          </transition-group>
-        </div>
-      </aside>
+      <vocabulary-view
+        :vocabulary="vocabulary"
+        :search-query.sync="searchQuery"
+        :filter-type.sync="filterType"
+        @copy="copyToClipboard"
+        @edit="editVocabulary"
+        @delete="deleteVocabulary"
+        @add-tag="addTag"
+      ></vocabulary-view>
     </main>
 
     <!-- Mobile Vocabulary Toggle -->
@@ -306,6 +254,173 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <!-- Main Script -->
   <script>
+    const CONFIG = {
+      DATABASE_URL: "postgresql://neondb_owner:derbGji8KWI2@ep-holy-glitter-a59iygke.us-east-2.aws.neon.tech/kittyspanish?sslmode=require",
+      OPENAI_API_KEY: "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"
+    };
+
+    const API = {
+      async callOpenAI(prompt) {
+        try {
+          const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+            model: "gpt-4",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7
+          }, {
+            headers: {
+              'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          return response.data.choices[0].message.content;
+        } catch (error) {
+          console.error('OpenAI API Error:', error);
+          throw error;
+        }
+      }
+    };
+
+    Vue.component('error-boundary', {
+      data() {
+        return {
+          hasError: false,
+          error: null
+        }
+      },
+      methods: {
+        handleError(error) {
+          this.hasError = true;
+          this.error = error;
+          console.error('Error caught by boundary:', error);
+        },
+        retry() {
+          this.hasError = false;
+          this.error = null;
+        }
+      },
+      template: `
+        <div v-if="hasError" class="error-boundary p-4 bg-red-100 dark:bg-red-900 rounded-lg">
+          <h3 class="text-lg font-bold text-red-700 dark:text-red-300">Something went wrong</h3>
+          <p class="text-red-600 dark:text-red-400">{{ error && error.message }}</p>
+          <button @click="retry" class="mt-2 btn btn-error">Retry</button>
+        </div>
+        <slot v-else></slot>
+      `
+    });
+
+    Vue.component('chat-view', {
+      props: ['messages', 'userInput'],
+      template: `
+        <section class="w-full md:w-2/3 p-4 flex flex-col">
+          <div class="flex-1 overflow-y-auto mb-4" ref="chatContainer">
+            <div v-for="message in messages" :key="message.id" class="mb-2">
+              <div :class="{'text-right': message.sender === 'user', 'text-left': message.sender === 'ai'}">
+                <div :class="message.sender === 'user' ? 'bg-orange-200 dark:bg-orange-700' : 'bg-blue-200 dark:bg-blue-700'"
+                     class="inline-block p-2 rounded max-w-full break-words">
+                  <p v-html="message.content"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <slot name="input"></slot>
+          <slot name="upload-buttons"></slot>
+        </section>
+      `
+    });
+
+    Vue.component('vocabulary-view', {
+      props: ['vocabulary', 'searchQuery', 'filterType'],
+      template: `
+        <aside class="hidden md:block w-1/3 p-4 bg-gray-100 dark:bg-gray-800 border-l overflow-y-auto">
+          <h2 class="text-xl font-bold mb-4">Lista de Vocabulario</h2>
+          <div class="mb-4">
+            <input v-model="searchQuery" class="input input-bordered w-full mb-2" 
+                   placeholder="Buscar vocabulario..." aria-label="Buscar vocabulario">
+            <select v-model="filterType" class="select select-bordered w-full" 
+                    aria-label="Filtrar por tipo">
+              <option value="">Todos los tipos</option>
+              <option value="word">Palabras</option>
+              <option value="idiom">Modismos</option>
+              <option value="expression">Expresiones</option>
+            </select>
+          </div>
+          <div>
+            <transition-group name="fade" tag="div">
+              <div v-for="word in filteredVocabulary" :key="word.id" 
+                   class="mb-4 p-2 bg-white dark:bg-gray-700 rounded shadow">
+                <div class="flex justify-between items-center">
+                  <h3 class="font-bold text-lg">{{ word.spanish }}</h3>
+                  <div class="flex space-x-2">
+                    <button @click="$emit('copy', word)" class="btn btn-xs btn-ghost" 
+                            aria-label="Copiar">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                           viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M16 8l6 6-6 6" />
+                      </svg>
+                    </button>
+                    <button @click="$emit('edit', word)" class="btn btn-xs btn-ghost" 
+                            aria-label="Editar">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                           viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15.232 5.232l3.536 3.536M9.354 15.536L4.464 20.426a2 2 0 01-2.828-2.828L7.05 12.05a2 2 0 012.828 0l4.95 4.95a2 2 0 01-.001 2.828z" />
+                      </svg>
+                    </button>
+                    <button @click="$emit('delete', word.id)" 
+                            class="btn btn-xs btn-ghost text-red-500" aria-label="Eliminar">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                           viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <p class="text-gray-600 dark:text-gray-300">{{ word.chinese }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Añadido: {{ word.timestamp }}
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Tipo: {{ capitalize(word.type) }}
+                </p>
+                <ul class="list-disc ml-4 mt-2">
+                  <li v-for="(example, index) in word.examples" :key="index">
+                    {{ example }}
+                  </li>
+                </ul>
+                <div class="mt-2">
+                  <span v-for="tag in word.tags" :key="tag" class="badge badge-primary mr-1">
+                    {{ tag }}
+                  </span>
+                  <button @click="$emit('add-tag', word)" class="btn btn-xs btn-outline ml-2" 
+                          aria-label="Añadir etiqueta">+</button>
+                </div>
+              </div>
+            </transition-group>
+          </div>
+        </aside>
+      `,
+      computed: {
+        filteredVocabulary() {
+          return this.vocabulary.filter(word => {
+            const matchesSearch = word.spanish.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                                word.chinese.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                                word.tags.some(tag => tag.toLowerCase().includes(this.searchQuery.toLowerCase()));
+            const matchesType = this.filterType ? word.type === this.filterType : true;
+            return matchesSearch && matchesType;
+          });
+        }
+      },
+      methods: {
+        capitalize(str) {
+          return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+      }
+    });
+
     new Vue({
       el: '#app',
       data: {
@@ -320,6 +435,7 @@
         editingVocabulary: null,
         addingTagVocabulary: null,
         newTag: '',
+        darkModeMediaQuery: null,
       },
       computed: {
         filteredVocabulary() {
@@ -420,74 +536,33 @@
         },
         async getAIResponse(prompt) {
           const loadingId = Date.now() + Math.random();
-          // Show loading toast
-          this.showToast('Esperando respuesta del AI...', 'info', loadingId);
+          this.showToast('Procesando tu mensaje...', 'info', loadingId);
 
-          const response = await axios.post(
-            'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct',
-            {
-              inputs: prompt,
-              options: { wait_for_model: true }
-            },
-            {
-              headers: {
-                Authorization: `Bearer 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`,
-                'Content-Type': 'application/json'
-              }
-            }
-          );
-
-          if (response.status !== 200) {
-            throw new Error(`AI API error: ${response.statusText}`);
-          }
-
-          const responseData = response.data;
-
-          // Extract generated text
-          const responseText = responseData.generated_text || responseData[0].generated_text;
-
-          // Parse JSON from AI response
-          let parsedResponse;
           try {
-            parsedResponse = JSON.parse(responseText);
+            const responseText = await API.callOpenAI(prompt);
+            let parsedResponse;
+            
+            try {
+              parsedResponse = JSON.parse(responseText);
+            } catch (error) {
+              console.error('Error parsing AI response:', error);
+              throw new Error('Invalid AI response format');
+            }
+
+            // Validate response structure
+            if (!parsedResponse.translation && !parsedResponse.vocabulary) {
+              throw new Error('Invalid response structure');
+            }
+
+            return {
+              responseText: parsedResponse.translation,
+              vocabulary: parsedResponse.vocabulary || [],
+              loadingId
+            };
           } catch (error) {
-            console.error('Error parsing AI response as JSON:', error);
-            throw new Error('Formato de respuesta inválido del AI.');
+            console.error('AI Response Error:', error);
+            throw error;
           }
-
-          // Validate schema
-          if ((!parsedResponse.chinese_translation && !parsedResponse.spanish_translation) ||
-              !parsedResponse.vocabulary_explanation) {
-            throw new Error('Respuesta del AI no contiene los campos necesarios.');
-          }
-
-          // Extract vocabulary entries
-          let vocabularyEntries = [];
-          if (Array.isArray(parsedResponse.vocabulary_explanation)) {
-            vocabularyEntries = parsedResponse.vocabulary_explanation.map(vocab => ({
-              spanish: vocab.spanish,
-              chinese: vocab.chinese,
-              timestamp: vocab.timestamp || new Date().toLocaleString(),
-              examples: vocab.examples || [],
-              type: vocab.type || 'word',
-              tags: vocab.tags || []
-            }));
-          } else if (typeof parsedResponse.vocabulary_explanation === 'object') {
-            vocabularyEntries.push({
-              spanish: parsedResponse.vocabulary_explanation.spanish,
-              chinese: parsedResponse.vocabulary_explanation.chinese,
-              timestamp: parsedResponse.vocabulary_explanation.timestamp || new Date().toLocaleString(),
-              examples: parsedResponse.vocabulary_explanation.examples || [],
-              type: parsedResponse.vocabulary_explanation.type || 'word',
-              tags: parsedResponse.vocabulary_explanation.tags || []
-            });
-          }
-
-          return {
-            responseText: parsedResponse.chinese_translation || parsedResponse.spanish_translation,
-            vocabulary: vocabularyEntries,
-            loadingId: loadingId
-          };
         },
         extractVocabularyFromResponse(responseData) {
           // Already handled in getAIResponse
@@ -693,8 +768,8 @@
         },
         toggleDarkMode() {
           this.darkMode = !this.darkMode;
-          // Persist dark mode preference
           localStorage.setItem('darkMode', this.darkMode);
+          document.documentElement.classList.toggle('dark', this.darkMode);
         },
         loadDarkMode() {
           const savedMode = localStorage.getItem('darkMode');
@@ -710,13 +785,51 @@
           if (savedVocab) {
             this.vocabulary = JSON.parse(savedVocab);
           }
+        },
+        handleSystemDarkModeChange(e) {
+          if (localStorage.getItem('darkMode') === null) {
+            this.darkMode = e.matches;
+          }
+        },
+        saveToLocalStorage() {
+          try {
+            localStorage.setItem('messages', JSON.stringify(this.messages));
+            localStorage.setItem('vocabulary', JSON.stringify(this.vocabulary));
+          } catch (error) {
+            console.error('Error saving to localStorage:', error);
+            this.showToast('Error saving data locally', 'error');
+          }
+        },
+        loadFromLocalStorage() {
+          try {
+            const savedMessages = localStorage.getItem('messages');
+            const savedVocabulary = localStorage.getItem('vocabulary');
+            
+            if (savedMessages) {
+              this.messages = JSON.parse(savedMessages);
+            }
+            
+            if (savedVocabulary) {
+              this.vocabulary = JSON.parse(savedVocabulary);
+            }
+          } catch (error) {
+            console.error('Error loading from localStorage:', error);
+            this.showToast('Error loading saved data', 'error');
+          }
         }
       },
       created() {
-        // Load vocabulary from localStorage
         this.loadVocabulary();
-        // Load dark mode preference
         this.loadDarkMode();
+        
+        // Add system dark mode detection
+        this.darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        this.darkModeMediaQuery.addEventListener('change', this.handleSystemDarkModeChange);
+        
+        // Set initial dark mode if not set
+        if (localStorage.getItem('darkMode') === null) {
+          this.darkMode = this.darkModeMediaQuery.matches;
+        }
       }
     });
   </script>
@@ -734,6 +847,54 @@
       aside {
         display: none;
       }
+    }
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 300px;
+    }
+
+    .toast-info {
+      border-left: 4px solid #3b82f6;
+    }
+
+    .toast-success {
+      border-left: 4px solid #10b981;
+    }
+
+    .toast-error {
+      border-left: 4px solid #ef4444;
+    }
+
+    .dark .toast {
+      background-color: #374151;
+      color: white;
+    }
+
+    .fade-enter-active, 
+    .fade-leave-active {
+      transition: all 0.3s ease;
+    }
+
+    .fade-enter-from, 
+    .fade-leave-to {
+      opacity: 0;
+      transform: translateX(30px);
     }
   </style>
 </body>
