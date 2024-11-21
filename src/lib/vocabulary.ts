@@ -103,44 +103,6 @@ export function filterVocabulary(items: Vocabulary[], filters: VocabularyFilters
   return filtered;
 }
 
-// Review management
-export async function markAsReviewed(itemId: string) {
-  const response = await fetch(`/api/vocabulary/${itemId}/review`, {
-    method: 'POST',
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to mark item as reviewed');
-  }
-
-  const updatedItem = await response.json();
-  const index = vocabularyCache.findIndex(item => item.id === itemId);
-  if (index !== -1) {
-    vocabularyCache[index] = updatedItem;
-    notifyListeners();
-  }
-  
-  sendWebSocketMessage({ type: 'vocabulary_update', item: updatedItem });
-  return updatedItem;
-}
-
-// Statistics and analytics
-export function getVocabularyStats() {
-  return {
-    total: vocabularyCache.length,
-    reviewedToday: vocabularyCache.filter(item => {
-      const lastReviewed = new Date(item.lastReviewed);
-      const today = new Date();
-      return lastReviewed.toDateString() === today.toDateString();
-    }).length,
-    needsReview: vocabularyCache.filter(item => {
-      const lastReviewed = new Date(item.lastReviewed);
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      return lastReviewed < threeDaysAgo;
-    }).length,
-  };
-}
 
 // Initialize the vocabulary system
 export function initializeVocabulary() {
