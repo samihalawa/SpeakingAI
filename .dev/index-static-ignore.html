@@ -263,9 +263,12 @@
       async callOpenAI(prompt) {
         try {
           const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-            model: "gpt-4",
+            model: "gpt-4-turbo-preview",
             messages: [{ role: "user", content: prompt }],
-            temperature: 0.7
+            temperature: 0.7,
+            max_tokens: 2000,
+            presence_penalty: 0.6,
+            frequency_penalty: 0.5
           }, {
             headers: {
               'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
@@ -277,6 +280,15 @@
           console.error('OpenAI API Error:', error);
           throw error;
         }
+      },
+
+      async translateWithAI(text, fromLang, toLang) {
+        const prompt = `Translate the following ${fromLang} text to ${toLang}. 
+                       Also identify and explain any difficult vocabulary, idioms, or cultural references.
+                       Return the response in JSON format with translation and vocabulary explanations.
+                       Text: ${text}`;
+        
+        return this.callOpenAI(prompt);
       }
     };
 
@@ -525,13 +537,53 @@
           }
         },
         generatePrompt(message) {
-          // Enhanced language detection using regex patterns
           const chinesePattern = /[\u4e00-\u9fff]/;
           const isChinese = chinesePattern.test(message);
+          
           if (isChinese) {
-            return `Traduce el siguiente texto al español y resalta el vocabulario clave difícil para un estudiante de nivel B2, incluyendo explicaciones. Responde en formato JSON siguiendo el esquema: { "spanish_translation": "traducción completa", "vocabulary_explanation": [ { "spanish": "palabra en español", "chinese": "traducción al chino", "timestamp": "fecha y hora", "examples": ["ejemplo 1", "ejemplo 2"], "type": "word/idiom/expression" }, ... ] }. Texto: "${message}"`;
+            return `As a Spanish language expert, translate this Chinese text to Spanish and analyze it:
+            
+            Text: "${message}"
+            
+            Please provide a response in the following JSON format:
+            {
+              "translation": "Spanish translation here",
+              "vocabulary": [
+                {
+                  "spanish": "difficult word or phrase",
+                  "chinese": "对应的中文",
+                  "type": "word/idiom/expression",
+                  "examples": ["Example sentence 1", "Example sentence 2"],
+                  "explanation": "Detailed explanation in Chinese",
+                  "level": "B1/B2/C1",
+                  "tags": ["grammar", "colloquial", "formal", etc]
+                }
+              ],
+              "grammar_notes": ["Any relevant grammar explanations in Chinese"],
+              "cultural_notes": ["Any cultural context or usage notes in Chinese"]
+            }`;
           } else {
-            return `Traduce el siguiente texto al chino y proporciona una explicación detallada de las palabras difíciles, modismos y matices culturales para un estudiante de nivel B2. Responde en formato JSON siguiendo el esquema: { "chinese_translation": "traducción completa", "vocabulary_explanation": [ { "spanish": "palabra en español", "chinese": "traducción al chino", "timestamp": "fecha y hora", "examples": ["ejemplo 1", "ejemplo 2"], "type": "word/idiom/expression" }, ... ] }. Texto: "${message}"`;
+            return `As a Chinese language expert, translate this Spanish text to Chinese and analyze it:
+            
+            Text: "${message}"
+            
+            Please provide a response in the following JSON format:
+            {
+              "translation": "Chinese translation here",
+              "vocabulary": [
+                {
+                  "spanish": "palabra o frase difícil",
+                  "chinese": "Chinese translation",
+                  "type": "word/idiom/expression",
+                  "examples": ["Example sentence 1", "Example sentence 2"],
+                  "explanation": "Detailed explanation in Spanish",
+                  "level": "B1/B2/C1",
+                  "tags": ["grammar", "colloquial", "formal", etc]
+                }
+              ],
+              "grammar_notes": ["Any relevant grammar explanations in Spanish"],
+              "cultural_notes": ["Any cultural context or usage notes in Spanish"]
+            }`;
           }
         },
         async getAIResponse(prompt) {
@@ -549,16 +601,48 @@
               throw new Error('Invalid AI response format');
             }
 
-            // Validate response structure
-            if (!parsedResponse.translation && !parsedResponse.vocabulary) {
-              throw new Error('Invalid response structure');
-            }
-
-            return {
+            // Process the response
+            const processedResponse = {
               responseText: parsedResponse.translation,
-              vocabulary: parsedResponse.vocabulary || [],
+              vocabulary: parsedResponse.vocabulary.map(item => ({
+                id: Date.now() + Math.random(),
+                spanish: item.spanish,
+                chinese: item.chinese,
+                type: item.type,
+                examples: item.examples,
+                timestamp: new Date().toLocaleString(),
+                tags: [...(item.tags || []), item.level],
+                explanation: item.explanation
+              })),
+              grammar_notes: parsedResponse.grammar_notes,
+              cultural_notes: parsedResponse.cultural_notes,
               loadingId
             };
+
+            // Format the response text with notes
+            processedResponse.responseText = `
+              <div class="translation-result">
+                <p class="font-bold mb-2">${processedResponse.responseText}</p>
+                ${processedResponse.grammar_notes.length > 0 ? `
+                  <div class="grammar-notes mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                    <h4 class="font-bold">Grammar Notes:</h4>
+                    <ul class="list-disc ml-4">
+                      ${processedResponse.grammar_notes.map(note => `<li>${note}</li>`).join('')}
+                    </ul>
+                  </div>
+                ` : ''}
+                ${processedResponse.cultural_notes.length > 0 ? `
+                  <div class="cultural-notes mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                    <h4 class="font-bold">Cultural Notes:</h4>
+                    <ul class="list-disc ml-4">
+                      ${processedResponse.cultural_notes.map(note => `<li>${note}</li>`).join('')}
+                    </ul>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+
+            return processedResponse;
           } catch (error) {
             console.error('AI Response Error:', error);
             throw error;
@@ -569,12 +653,10 @@
           return responseData.vocabulary;
         },
         formatMessage(content, sender) {
-          // Format message content with highlighted vocabulary if AI
           if (sender === 'ai') {
-            // Display the translation directly
-            return content;
+            return content; // The content is already formatted in getAIResponse
           }
-          return content;
+          return `<p>${content}</p>`;
         },
         handleImageUpload(event) {
           const file = event.target.files[0];
@@ -673,17 +755,24 @@
         },
         toggleVocabulary() {
           this.showVocabulary = !this.showVocabulary;
+          if (this.showVocabulary) {
+            document.body.style.overflow = 'hidden';
+          } else {
+            document.body.style.overflow = 'auto';
+          }
         },
         scrollToBottom() {
           const container = this.$refs.chatContainer;
-          container.scrollTop = container.scrollHeight;
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
         },
         showToast(message, type = 'info', id = null) {
           const toastId = id || Date.now() + Math.random();
+          this.toasts = this.toasts.filter(t => t.type !== type);
           this.toasts.push({ id: toastId, message, type });
-          // Auto-remove toast after 5 seconds
           setTimeout(() => {
-            this.toasts = this.toasts.filter(toast => toast.id !== toastId);
+            this.removeToast(toastId);
           }, 5000);
         },
         removeToast(id) {
@@ -693,38 +782,50 @@
           this.toasts.pop();
         },
         copyToClipboard(word) {
-          const textToCopy = `Palabra: ${word.spanish}\nTraducción: ${word.chinese}\nTipo: ${this.capitalize(word.type)}\nEjemplos:\n1. ${word.examples[0]}\n2. ${word.examples[1]}`;
-          navigator.clipboard.writeText(textToCopy).then(() => {
-            this.showToast('Vocabulario copiado al portapapeles.', 'success');
-          }).catch(err => {
-            console.error('Error al copiar al portapapeles:', err);
-            this.showToast('Error al copiar al portapapeles.', 'error');
-          });
+          const textToCopy = `
+Palabra: ${word.spanish}
+Traducción: ${word.chinese}
+Tipo: ${this.capitalize(word.type)}
+Ejemplos:
+${word.examples.map((ex, i) => `${i + 1}. ${ex}`).join('\n')}
+${word.explanation ? `\nExplicación: ${word.explanation}` : ''}
+${word.tags.length ? `\nEtiquetas: ${word.tags.join(', ')}` : ''}
+          `.trim();
+
+          try {
+            await navigator.clipboard.writeText(textToCopy);
+            this.showToast('Vocabulario copiado al portapapeles', 'success');
+          } catch (err) {
+            console.error('Error al copiar:', err);
+            this.showToast('Error al copiar al portapapeles', 'error');
+          }
         },
         editVocabulary(word) {
-          // Initialize editingVocabulary with current word data
-          this.editingVocabulary = { ...word, examplesText: word.examples.join(', '), tagsText: word.tags.join(', ') };
+          this.editingVocabulary = {
+            ...word,
+            examplesText: word.examples.join(', '),
+            tagsText: word.tags.join(', ')
+          };
         },
         updateVocabulary() {
           if (!this.editingVocabulary) return;
 
-          // Find the index of the vocabulary to update
           const index = this.vocabulary.findIndex(vocab => vocab.id === this.editingVocabulary.id);
           if (index !== -1) {
-            // Update the vocabulary entry
-            this.vocabulary[index].spanish = this.editingVocabulary.spanish;
-            this.vocabulary[index].chinese = this.editingVocabulary.chinese;
-            this.vocabulary[index].examples = this.editingVocabulary.examplesText.split(',').map(ex => ex.trim());
-            this.vocabulary[index].type = this.editingVocabulary.type;
-            this.vocabulary[index].tags = this.editingVocabulary.tagsText ? this.editingVocabulary.tagsText.split(',').map(tag => tag.trim()) : [];
-            // Save to localStorage
+            const updatedVocab = {
+              ...this.vocabulary[index],
+              spanish: this.editingVocabulary.spanish,
+              chinese: this.editingVocabulary.chinese,
+              examples: this.editingVocabulary.examplesText.split(',').map(ex => ex.trim()),
+              type: this.editingVocabulary.type,
+              tags: this.editingVocabulary.tagsText ? this.editingVocabulary.tagsText.split(',').map(tag => tag.trim()) : []
+            };
+            
+            this.$set(this.vocabulary, index, updatedVocab);
             this.saveVocabulary();
-            // Show success toast
-            this.showToast('Vocabulario actualizado correctamente.', 'success');
+            this.showToast('Vocabulario actualizado correctamente', 'success');
+            this.editingVocabulary = null;
           }
-
-          // Clear editingVocabulary
-          this.editingVocabulary = null;
         },
         cancelEdit() {
           this.editingVocabulary = null;
@@ -816,6 +917,10 @@
             console.error('Error loading from localStorage:', error);
             this.showToast('Error loading saved data', 'error');
           }
+        },
+        autoSave() {
+          this.saveToLocalStorage();
+          this.showToast('Datos guardados automáticamente', 'info');
         }
       },
       created() {
@@ -830,6 +935,15 @@
         if (localStorage.getItem('darkMode') === null) {
           this.darkMode = this.darkModeMediaQuery.matches;
         }
+
+        // Set up auto-save
+        setInterval(this.autoSave, 300000); // Auto-save every 5 minutes
+
+        // Load saved data
+        this.loadFromLocalStorage();
+
+        // Initialize dark mode
+        document.documentElement.classList.toggle('dark', this.darkMode);
       }
     });
   </script>
@@ -895,6 +1009,85 @@
     .fade-leave-to {
       opacity: 0;
       transform: translateX(30px);
+    }
+
+    /* Add to existing styles */
+    .translation-result {
+      @apply space-y-4;
+    }
+
+    .grammar-notes,
+    .cultural-notes {
+      @apply bg-gray-100 dark:bg-gray-700 p-4 rounded-lg;
+    }
+
+    .grammar-notes h4,
+    .cultural-notes h4 {
+      @apply text-lg font-bold mb-2;
+    }
+
+    .grammar-notes ul,
+    .cultural-notes ul {
+      @apply list-disc list-inside;
+    }
+
+    .vocabulary-item {
+      @apply border-l-4 border-blue-500 pl-4 my-2;
+    }
+
+    .vocabulary-explanation {
+      @apply text-sm text-gray-600 dark:text-gray-400;
+    }
+
+    .mobile-vocabulary {
+      @apply fixed inset-0 bg-white dark:bg-gray-800 z-50 overflow-y-auto;
+      transform: translateX(100%);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .mobile-vocabulary.active {
+      transform: translateX(0);
+    }
+
+    .chat-container {
+      @apply flex-1 overflow-y-auto mb-4 p-4;
+      scroll-behavior: smooth;
+    }
+
+    .message-bubble {
+      @apply max-w-[80%] rounded-lg p-3 mb-2;
+    }
+
+    .user-message {
+      @apply bg-orange-200 dark:bg-orange-700 ml-auto;
+    }
+
+    .ai-message {
+      @apply bg-blue-200 dark:bg-blue-700;
+    }
+
+    .vocabulary-card {
+      @apply bg-white dark:bg-gray-700 rounded-lg shadow-md p-4 mb-4 transition-all duration-200;
+    }
+
+    .vocabulary-card:hover {
+      @apply shadow-lg transform -translate-y-1;
+    }
+
+    .button-icon {
+      @apply w-5 h-5 inline-block align-middle;
+    }
+
+    .modal-overlay {
+      @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+    }
+
+    .modal-content {
+      @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-11/12 max-w-2xl;
+    }
+
+    .input-field {
+      @apply w-full border dark:border-gray-600 rounded-lg p-2 mb-4 focus:ring-2 focus:ring-blue-500;
     }
   </style>
 </body>
