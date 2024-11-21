@@ -390,20 +390,18 @@
  <!-- Main Script -->
  <script>
    const CONFIG = {
-     DATABASE_URL: ["postgresql://neondb_owner:", "derbGji8KWI2@", "ep-holy-glitter-a59iygke.us-east-2.aws.neon.tech/", "kittyspanish?sslmode=require"].join(''),
-     OPENAI_API_KEY: ["sk-proj-", "EbmjbCxJwctGMmVJzRUrUpKjTYOfv5hYiofLKfiE0tMoqF_i", "3qr6sS_QGpIIQWUxEeoQMNsijtT3BlbkFJxncEjQOPMli1tA4-VhPx604ETqqDYpGmH2Qbd_jtK15-5Wovl-LoS1annPH3Ta_FT-7wKhTZ8A"].join('')
+     DATABASE_URL: "postgresql://neondb_owner:derbGji8KWI2@ep-holy-glitter-a59iygke.us-east-2.aws.neon.tech/kittyspanish?sslmode=require",
+     OPENAI_API_KEY: "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"
    };
  
    const API = {
      async callOpenAI(prompt) {
        try {
          const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-           model: "gpt-4o-mini",
+           model: "gpt-4-turbo-preview",
            messages: [{ role: "user", content: prompt }],
            temperature: 0.7,
-           max_tokens: 2000,
-           presence_penalty: 0.6,
-           frequency_penalty: 0.5
+           max_tokens: 2000
          }, {
            headers: {
              'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
@@ -417,21 +415,14 @@
        }
      },
  
-     async translateWithAI(text, fromLang, toLang) {
-       const prompt = `Translate the following ${fromLang} text to ${toLang}. 
-                      Also identify and explain any difficult vocabulary, idioms, or cultural references.
-                      Return the response in JSON format with translation and vocabulary explanations.
-                      Text: ${text}`;
-       
-       return this.callOpenAI(prompt);
-     },
- 
      async syncWithDatabase() {
        try {
-         const response = await axios.get('https://ep-holy-glitter-a59iygke.us-east-2.aws.neon.tech/api/v1/vocabulary', {
+         const response = await axios({
+           method: 'GET',
+           url: 'https://data.neon.tech/v2/projects/holy-glitter-a59iygke/branches/main/databases/kittyspanish/tables/vocabulary/rows',
            headers: {
              'Authorization': `Bearer ${CONFIG.DATABASE_URL}`,
-             'Content-Type': 'application/json'
+             'Accept': 'application/json'
            }
          });
          return response.data || [];
@@ -443,11 +434,14 @@
  
      async saveToDatabase(vocabulary) {
        try {
-         const response = await axios.post('https://ep-holy-glitter-a59iygke.us-east-2.aws.neon.tech/api/v1/vocabulary', vocabulary, {
+         const response = await axios({
+           method: 'POST',
+           url: 'https://data.neon.tech/v2/projects/holy-glitter-a59iygke/branches/main/databases/kittyspanish/tables/vocabulary/rows',
            headers: {
              'Authorization': `Bearer ${CONFIG.DATABASE_URL}`,
              'Content-Type': 'application/json'
-           }
+           },
+           data: vocabulary
          });
          return response.data;
        } catch (error) {
@@ -458,7 +452,9 @@
  
      async deleteFromDatabase(id) {
        try {
-         const response = await axios.delete(`https://ep-holy-glitter-a59iygke.us-east-2.aws.neon.tech/api/v1/vocabulary/${id}`, {
+         const response = await axios({
+           method: 'DELETE',
+           url: `https://data.neon.tech/v2/projects/holy-glitter-a59iygke/branches/main/databases/kittyspanish/tables/vocabulary/rows/${id}`,
            headers: {
              'Authorization': `Bearer ${CONFIG.DATABASE_URL}`
            }
