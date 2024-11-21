@@ -1,0 +1,10 @@
+{
+  "variant": "modern",
+  "primary": "#4F46E5",
+  "secondary": "#06B6D4",
+  "accent": "#F0FDFA",
+  "background": "#FFFFFF",
+  "text": "#1F2937",
+  "appearance": "light",
+  "radius": 1.2
+}
