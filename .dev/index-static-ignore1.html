@@ -2,11 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LanguagAI - Plataforma de Aprendizaje de Español</title>
   
-  <!-- Radix UI Theme -->
+  <!-- Dependencies -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@2.0.0/styles.css">
-  
+
   <!-- Custom CSS -->
   <style>
     /* Base Theme Variables */
@@ -60,1414 +63,399 @@
       font-family: system-ui, -apple-system, sans-serif;
       background-color: hsl(var(--background));
       color: hsl(var(--foreground));
+      margin: 0;
+      min-height: 100vh;
     }
 
-    /* Component Styles */
-    .rt-Card {
-      background-color: hsl(var(--card));
-      border: 1px solid hsl(var(--border));
-      border-radius: var(--radius);
-      padding: 1rem;
-      transition: all 0.2s ease;
+    /* Layout */
+    .app-container {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
     }
 
-    .rt-Card:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
-
-    .rt-Badge {
-      display: inline-flex;
-      align-items: center;
-      background-color: hsl(var(--secondary));
-      color: hsl(var(--secondary-foreground));
-      font-size: 0.75rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: var(--radius);
-    }
-
-    .rt-Button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background-color: hsl(var(--primary));
-      color: hsl(var(--primary-foreground));
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius);
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-
-    .rt-Button:hover {
-      opacity: 0.9;
-    }
-
-    .rt-Button.rt-variant-ghost {
-      background-color: transparent;
-      color: hsl(var(--foreground));
-    }
-
-    .rt-Button.rt-variant-ghost:hover {
-      background-color: hsl(var(--accent));
-    }
-
-    .rt-IconButton {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 2rem;
-      height: 2rem;
-      border-radius: var(--radius);
-      transition: all 0.2s ease;
-    }
-
-    .rt-IconButton:hover {
-      background-color: hsl(var(--accent));
-    }
-
-    .rt-ScrollArea {
-      max-height: calc(100vh - 200px);
-      overflow-y: auto;
-      padding-right: 0.5rem;
-    }
-
-    .rt-TextInput {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid hsl(var(--input));
-      border-radius: var(--radius);
-      background-color: transparent;
-      color: hsl(var(--foreground));
-    }
-
-    .rt-TextInput:focus {
-      outline: none;
-      border-color: hsl(var(--ring));
-      box-shadow: 0 0 0 2px hsla(var(--ring), 0.3);
-    }
-
-    /* Animation Classes */
-    .fade-enter-active, .fade-leave-active {
-      transition: all 0.3s ease;
-    }
-
-    .fade-enter, .fade-leave-to {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    /* Layout Classes */
-    .rt-Flex {
-      display: flex;
-    }
-
-    .rt-gap-2 {
-      gap: 0.5rem;
-    }
-
-    .rt-justify-between {
-      justify-content: space-between;
-    }
-
-    .rt-items-center {
-      align-items: center;
-    }
-
-    .rt-p-4 {
-      padding: 1rem;
-    }
-
-    .rt-mb-4 {
-      margin-bottom: 1rem;
-    }
-
-    /* Toast Styles */
-    .rt-ToastRegion {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      z-index: 50;
-    }
-
-    .rt-Toast {
-      background-color: hsl(var(--background));
-      border: 1px solid hsl(var(--border));
-      border-radius: var(--radius);
-      padding: 1rem;
-      margin-bottom: 0.5rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    /* Grid Layout */
-    .rt-Grid {
+    .main-content {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 1rem;
       padding: 1rem;
+      height: calc(100vh - 4rem);
     }
 
     @media (max-width: 768px) {
-      .rt-Grid {
+      .main-content {
         grid-template-columns: 1fr;
       }
+      
+      .vocabulary-section {
+        display: none;
+      }
+      
+      .vocabulary-section.active {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: hsl(var(--background));
+      }
+    }
+
+    /* Components */
+    .chat-section {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .message-input {
+      padding: 1rem;
+      border-top: 1px solid hsl(var(--border));
+    }
+
+    .message {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: var(--radius);
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+    }
+
+    .message.user {
+      margin-left: auto;
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      max-width: 80%;
+    }
+
+    .message.ai {
+      margin-right: auto;
+      max-width: 80%;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide-in {
+      animation: slideIn 0.2s ease-out;
+    }
+
+    /* Utilities */
+    .hidden {
+      display: none;
+    }
+
+    .flex {
+      display: flex;
+    }
+
+    .flex-col {
+      flex-direction: column;
+    }
+
+    .items-center {
+      align-items: center;
+    }
+
+    .justify-between {
+      justify-content: space-between;
+    }
+
+    .gap-2 {
+      gap: 0.5rem;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 100;
+    }
+
+    .toast {
+      padding: 1rem;
+      border-radius: var(--radius);
+      background: hsl(var(--background));
+      border: 1px solid hsl(var(--border));
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 0.5rem;
+      animation: slideIn 0.2s ease-out;
     }
   </style>
 </head>
 <body>
-  <div id="app" class="rt-Theme">
-    <!-- Header with Radix UI -->
-    <header class="rt-Box rt-Flex rt-justify-between rt-items-center rt-p-4 rt-bg-accent-9">
-      <h1 class="rt-Text rt-size-5 rt-weight-bold rt-color-white">LanguagAI Español</h1>
-      <button class="rt-Button rt-variant-ghost" @click="toggleDarkMode">
-        <span class="rt-Icon" v-if="!darkMode">🌙</span>
-        <span class="rt-Icon" v-else>☀️</span>
+  <div id="app" class="app-container">
+    <header class="flex items-center justify-between p-4 border-b border-[hsl(var(--border))]">
+      <h1 class="text-xl font-bold">LanguagAI Español</h1>
+      <button @click="toggleTheme" class="p-2 rounded hover:bg-[hsl(var(--accent))]">
+        {{ darkMode ? '☀️' : '🌙' }}
       </button>
     </header>
 
-    <!-- Main Content -->
-    <main class="rt-Grid">
-      <!-- Chat Section -->
-      <div class="rt-Box rt-p-4">
-        <div class="rt-ScrollArea chat-container">
-          <transition-group name="fade">
-            <div v-for="message in messages" :key="message.id" 
-                 :class="['rt-Card rt-mb-4', message.role === 'user' ? 'user-message' : 'ai-message']">
-              <!-- Original Message -->
-              <div class="rt-Flex rt-gap-2 rt-mb-2">
-                <span class="rt-Icon">💬</span>
-                <p class="rt-Text">{{ message.content }}</p>
+    <main class="main-content">
+      <section class="chat-section">
+        <div class="chat-messages" ref="chatMessages">
+          <template v-for="message in messages" :key="message.id">
+            <div :class="['message slide-in', message.role]">
+              <div class="message-content">{{ message.content }}</div>
+              <div v-if="message.translation" class="message-translation text-sm text-[hsl(var(--muted-foreground))]">
+                {{ message.translation }}
               </div>
-
-              <!-- Translation -->
-              <div v-if="message.translation" class="rt-Flex rt-gap-2 rt-mb-2 rt-pl-4">
-                <span class="rt-Icon">🌐</span>
-                <p class="rt-Text rt-color-muted">{{ message.translation }}</p>
-              </div>
-
-              <!-- Explanation -->
-              <div v-if="message.explanation" class="rt-Box rt-bg-accent-3 rt-p-3 rt-rounded rt-mb-2">
-                <div class="rt-Flex rt-gap-2">
-                  <span class="rt-Icon">📚</span>
-                  <p class="rt-Text rt-size-2">{{ message.explanation }}</p>
-                </div>
-              </div>
-
-              <!-- Examples -->
-              <div v-if="message.examples?.length" class="rt-Box rt-pl-4 rt-mb-2">
-                <p class="rt-Text rt-weight-bold rt-mb-2">Examples:</p>
-                <div v-for="(example, idx) in message.examples" :key="idx"
-                     class="rt-Box rt-border-l-2 rt-border-accent-6 rt-pl-2 rt-mb-1">
-                  <p class="rt-Text rt-size-2">{{ example }}</p>
-                </div>
-              </div>
-
-              <!-- Vocabulary -->
-              <div v-if="message.detectedVocabulary?.length" class="rt-Box rt-mt-3">
-                <div class="rt-Flex rt-gap-2 rt-mb-2">
-                  <span class="rt-Icon">📖</span>
-                  <p class="rt-Text rt-weight-bold">New Vocabulary:</p>
-                </div>
-                <div class="rt-Grid rt-gap-2">
-                  <div v-for="vocab in message.detectedVocabulary" :key="vocab.id"
-                       class="rt-Card rt-p-2 rt-cursor-pointer"
-                       @click="showVocabDetails(vocab)">
-                    <div class="rt-Flex rt-justify-between rt-items-center">
-                      <div>
-                        <p class="rt-Text rt-weight-bold">{{ vocab.word }}</p>
-                        <p class="rt-Text rt-size-2 rt-color-muted">{{ vocab.translation }}</p>
-                      </div>
-                      <span class="rt-Badge">{{ vocab.type }}</span>
-                    </div>
-                  </div>
+              <div v-if="message.vocabulary?.length" class="vocabulary-highlights mt-2">
+                <div v-for="word in message.vocabulary" :key="word.id" 
+                     class="inline-block bg-[hsl(var(--accent))] rounded px-2 py-1 mr-2 mb-2 text-sm cursor-pointer"
+                     @click="showWordDetails(word)">
+                  {{ word.spanish }}
                 </div>
               </div>
             </div>
-          </transition-group>
+          </template>
         </div>
 
-        <!-- Chat Input -->
-        <div class="rt-Box rt-p-4 rt-border-t">
-          <div class="rt-Flex rt-gap-2">
+        <div class="message-input">
+          <form @submit.prevent="sendMessage" class="flex gap-2">
             <input v-model="userInput" 
-                   @keyup.enter="sendMessage"
-                   class="rt-TextInput"
-                   placeholder="Type your message..." />
-            <button @click="sendMessage" 
-                    class="rt-Button rt-variant-solid">
-              Send
+                   type="text" 
+                   placeholder="输入消息..." 
+                   class="flex-1 px-3 py-2 rounded border border-[hsl(var(--input))] bg-transparent"
+                   :disabled="loading">
+            <button type="submit" 
+                    class="px-4 py-2 rounded bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                    :disabled="loading || !userInput.trim()">
+              发送
             </button>
-          </div>
-          
-          <!-- Upload Buttons -->
-          <div class="rt-Flex rt-gap-2 rt-mt-2">
-            <input type="file" ref="imageInput" @change="handleImageUpload" 
-                   accept="image/*" class="rt-hidden" />
-            <button @click="$refs.imageInput.click()" 
-                    class="rt-Button rt-variant-soft">
-              <span class="rt-Icon">📷</span>
-              Image
-            </button>
-            
-            <input type="file" ref="audioInput" @change="handleAudioUpload" 
-                   accept="audio/*" class="rt-hidden" />
-            <button @click="$refs.audioInput.click()" 
-                    class="rt-Button rt-variant-soft">
-              <span class="rt-Icon">🎤</span>
-              Audio
-            </button>
-          </div>
+          </form>
         </div>
-      </div>
+      </section>
 
-      <!-- Vocabulary Panel -->
-      <div class="rt-Box rt-p-4 rt-border-l">
-        <div class="rt-Flex rt-justify-between rt-items-center rt-mb-4">
-          <h2 class="rt-Text rt-size-4 rt-weight-bold">Vocabulary</h2>
-          <div class="rt-Flex rt-gap-2">
-            <button class="rt-IconButton" @click="toggleView">
-              <span class="rt-Icon">📋</span>
-            </button>
-            <button class="rt-IconButton" @click="toggleSort">
-              <span class="rt-Icon">🔄</span>
-            </button>
-          </div>
+      <section class="vocabulary-section" :class="{ active: showVocabulary }">
+        <div class="flex items-center justify-between p-4 border-b border-[hsl(var(--border))]">
+          <h2 class="text-lg font-semibold">词汇表</h2>
+          <button @click="toggleVocabulary" class="md:hidden p-2">✕</button>
         </div>
 
-        <div class="rt-Box rt-mb-4">
-          <input v-model="searchQuery"
-                 class="rt-TextInput rt-mb-2"
-                 placeholder="Search vocabulary..." />
-          <select v-model="filterType" class="rt-TextInput">
-            <option value="">All Types</option>
-            <option value="word">Words</option>
-            <option value="phrase">Phrases</option>
-            <option value="idiom">Idioms</option>
-          </select>
-        </div>
+        <div class="p-4">
+          <input v-model="search" 
+                 type="search" 
+                 placeholder="搜索词汇..." 
+                 class="w-full px-3 py-2 rounded border border-[hsl(var(--input))] bg-transparent mb-4">
 
-        <div class="rt-ScrollArea">
-          <transition-group name="fade">
-            <div v-for="word in filteredVocabulary" :key="word.id"
-                 class="rt-Card rt-mb-2">
-              <div class="rt-Flex rt-justify-between">
+          <div class="vocabulary-list space-y-2">
+            <div v-for="word in filteredVocabulary" 
+                 :key="word.id" 
+                 class="p-3 rounded border border-[hsl(var(--border))] hover:border-[hsl(var(--ring))] cursor-pointer"
+                 @click="showWordDetails(word)">
+              <div class="flex justify-between items-start">
                 <div>
-                  <div class="rt-Flex rt-gap-2 rt-items-center">
-                    <p class="rt-Text rt-weight-bold">{{ word.spanish }}</p>
-                    <span class="rt-Badge">{{ word.type }}</span>
-                  </div>
-                  <p class="rt-Text rt-size-2 rt-color-muted">{{ word.chinese }}</p>
+                  <div class="font-medium">{{ word.spanish }}</div>
+                  <div class="text-sm text-[hsl(var(--muted-foreground))]">{{ word.chinese }}</div>
                 </div>
-                <div class="rt-Flex rt-gap-1">
-                  <button class="rt-IconButton" @click="copyToClipboard(word)">📋</button>
-                  <button class="rt-IconButton" @click="editVocabulary(word)">✏️</button>
-                  <button class="rt-IconButton rt-color-red" @click="deleteVocabulary(word.id)">🗑️</button>
+                <div class="text-xs px-2 py-1 rounded bg-[hsl(var(--secondary))]">
+                  {{ word.type }}
                 </div>
               </div>
             </div>
-          </transition-group>
+          </div>
         </div>
-      </div>
+      </section>
     </main>
 
-    <!-- Toast Notifications -->
-    <div class="rt-ToastRegion">
-      <transition-group name="fade">
-        <div v-for="toast in toasts" :key="toast.id" 
-             class="rt-Toast">
-          <p class="rt-Text">{{ toast.message }}</p>
-          <button class="rt-IconButton" @click="removeToast(toast.id)">✕</button>
+    <!-- Word Details Modal -->
+    <div v-if="selectedWord" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+      <div class="bg-[hsl(var(--background))] rounded-lg max-w-lg w-full p-6">
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="text-lg font-semibold">{{ selectedWord.spanish }}</h3>
+          <button @click="selectedWord = null" class="p-2">✕</button>
         </div>
-      </transition-group>
+
+        <div class="space-y-4">
+          <div>
+            <div class="text-sm text-[hsl(var(--muted-foreground))]">中文翻译</div>
+            <div>{{ selectedWord.chinese }}</div>
+          </div>
+
+          <div>
+            <div class="text-sm text-[hsl(var(--muted-foreground))]">例句</div>
+            <ul class="list-disc list-inside space-y-2">
+              <li v-for="example in selectedWord.examples" :key="example">{{ example }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container">
+      <div v-for="toast in toasts" :key="toast.id" class="toast">
+        {{ toast.message }}
+      </div>
     </div>
   </div>
 
- <!-- Vue and Components -->
- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
- <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
- <!-- Main Script -->
- <script>
-   const CONFIG = {
-     DATABASE_URL: "postgresql://neondb_owner:derbGji8KWI2@ep-holy-glitter-a59iygke.us-east-2.aws.neon.tech/kittyspanish?sslmode=require",
-     OPENAI_API_KEY: "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"
-   };
- 
-   const API = {
-     async callOpenAI(prompt) {
-       try {
-         const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-           model: "gpt-4-turbo-preview",
-           messages: [{ role: "user", content: prompt }],
-           temperature: 0.7,
-           max_tokens: 2000
-         }, {
-           headers: {
-             'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
-             'Content-Type': 'application/json'
-           }
-         });
-         return response.data.choices[0].message.content;
-       } catch (error) {
-         console.error('OpenAI API Error:', error);
-         throw error;
-       }
-     },
- 
-     async syncWithDatabase() {
-       try {
-         const response = await axios({
-           method: 'GET',
-           url: 'https://data.neon.tech/v2/projects/holy-glitter-a59iygke/branches/main/databases/kittyspanish/tables/vocabulary/rows',
-           headers: {
-             'Authorization': `Bearer ${CONFIG.DATABASE_URL}`,
-             'Accept': 'application/json'
-           }
-         });
-         return response.data || [];
-       } catch (error) {
-         console.error('Database sync error:', error);
-         throw error;
-       }
-     },
- 
-     async saveToDatabase(vocabulary) {
-       try {
-         const response = await axios({
-           method: 'POST',
-           url: 'https://data.neon.tech/v2/projects/holy-glitter-a59iygke/branches/main/databases/kittyspanish/tables/vocabulary/rows',
-           headers: {
-             'Authorization': `Bearer ${CONFIG.DATABASE_URL}`,
-             'Content-Type': 'application/json'
-           },
-           data: vocabulary
-         });
-         return response.data;
-       } catch (error) {
-         console.error('Database save error:', error);
-         throw error;
-       }
-     },
- 
-     async deleteFromDatabase(id) {
-       try {
-         const response = await axios({
-           method: 'DELETE',
-           url: `https://data.neon.tech/v2/projects/holy-glitter-a59iygke/branches/main/databases/kittyspanish/tables/vocabulary/rows/${id}`,
-           headers: {
-             'Authorization': `Bearer ${CONFIG.DATABASE_URL}`
-           }
-         });
-         return response.data;
-       } catch (error) {
-         console.error('Database delete error:', error);
-         throw error;
-       }
-     }
-   };
- 
-   Vue.component('error-boundary', {
-     data() {
-       return {
-         hasError: false,
-         error: null
-       }
-     },
-     methods: {
-       handleError(error) {
-         this.hasError = true;
-         this.error = error;
-         console.error('Error caught by boundary:', error);
-       },
-       retry() {
-         this.hasError = false;
-         this.error = null;
-       }
-     },
-     template: `
-       <div v-if="hasError" class="error-boundary p-4 bg-red-100 dark:bg-red-900 rounded-lg">
-         <h3 class="text-lg font-bold text-red-700 dark:text-red-300">Something went wrong</h3>
-         <p class="text-red-600 dark:text-red-400">{{ error && error.message }}</p>
-         <button @click="retry" class="mt-2 btn btn-error">Retry</button>
-       </div>
-       <slot v-else></slot>
-     `
-   });
- 
-   Vue.component('chat-view', {
-     props: ['messages', 'userInput'],
-     template: `
-       <div class="flex flex-col h-full">
-         <div class="rt-Card flex-1 flex flex-col min-h-0 overflow-hidden border-0 rounded-none bg-background">
-           <div class="rt-ScrollArea flex-1 min-h-0">
-             <div class="space-y-4 max-w-2xl mx-auto">
-               <transition-group name="fade">
-                 <div v-for="message in messages" :key="message.id"
-                   class="flex flex-col gap-3 relative w-full max-w-3xl mx-auto"
-                   :class="message.role === 'user' ? 'items-end' : 'items-start'"
-                 >
-                   <div class="rt-Card w-full" 
-                     :class="message.role === 'user' ? 'bg-primary/10' : 'bg-accent'"
-                   >
-                     <div class="p-4 space-y-4">
-                       <!-- Original Message -->
-                       <div class="flex items-start gap-2">
-                         <span class="rt-Icon h-5 w-5 mt-1 shrink-0">💬</span>
-                         <p class="text-lg font-medium">{{ message.content }}</p>
-                       </div>
-                       
-                       <!-- Translation -->
-                       <div v-if="message.translation" class="flex items-start gap-2 pl-7">
-                         <span class="rt-Icon h-5 w-5 mt-1 shrink-0 text-blue-500">🌐</span>
-                         <p class="text-base text-muted-foreground">{{ message.translation }}</p>
-                       </div>
-                       
-                       <!-- Explanation -->
-                       <div v-if="message.explanation" class="flex items-start gap-2 pl-7 bg-accent/50 p-3 rounded-md">
-                         <span class="rt-Icon h-5 w-5 mt-1 shrink-0 text-emerald-500">📚</span>
-                         <p class="text-sm text-muted-foreground whitespace-pre-wrap">
-                           {{ message.explanation }}
-                         </p>
-                       </div>
+  <script>
+    const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
-                       <!-- Vocabulary Section -->
-                       <div v-if="message.detectedVocabulary?.length" class="pl-7 mt-4 space-y-3">
-                         <div class="flex items-center gap-2">
-                           <span class="rt-Icon h-5 w-5 text-amber-500">📖</span>
-                           <p class="text-sm font-medium">Vocabulary:</p>
-                         </div>
-                         <div class="grid gap-2">
-                           <vocabulary-card
-                             v-for="(vocab, idx) in message.detectedVocabulary"
-                             :key="vocab.word + idx"
-                             :vocab="vocab"
-                             @click="showVocabDetails(vocab)"
-                           />
-                         </div>
-                       </div>
-                     </div>
-                   </div>
-                 </div>
-               </transition-group>
-             </div>
-           </div>
-         </div>
+    createApp({
+      setup() {
+        const messages = ref([]);
+        const vocabulary = ref([]);
+        const userInput = ref('');
+        const loading = ref(false);
+        const darkMode = ref(false);
+        const showVocabulary = ref(false);
+        const selectedWord = ref(null);
+        const search = ref('');
+        const toasts = ref([]);
+        const chatMessages = ref(null);
 
-         <!-- Chat Input -->
-         <div class="sticky bottom-0 w-full bg-background border-t z-50 shadow-lg">
-           <form @submit.prevent="sendMessage" class="px-2 sm:px-4 py-2 sm:py-4 flex gap-2 max-w-2xl mx-auto items-end">
-             <div class="flex-1 min-w-0">
-               <input 
-                 v-model="input"
-                 placeholder="输入消息..."
-                 :disabled="sending"
-                 class="rt-TextInput resize-none min-h-[40px] max-h-[200px] w-full transition-all duration-200"
-                 :class="[
-                   'sm:min-h-[44px] sm:text-base text-sm py-2 px-3',
-                   'focus:ring-2 focus:ring-primary',
-                   isTyping ? 'h-[80px] sm:h-[100px]' : 'h-[40px] sm:h-[44px]'
-                 ]"
-               />
-             </div>
-             <button 
-               type="submit"
-               :disabled="sending"
-               class="rt-Button shrink-0 transition-all duration-200"
-               :class="[
-                 isTyping ? 'h-[80px] sm:h-[100px] w-[50px] sm:w-[60px]' : 'h-[40px] sm:h-[44px] w-[40px] sm:w-[44px]'
-               ]"
-             >
-               <span v-if="sending" class="rt-Icon h-4 w-4 animate-spin">🔄</span>
-               <span v-else class="rt-Icon h-4 w-4">➡️</span>
-             </button>
-           </form>
-         </div>
-       </div>
-     `
-   });
+        const filteredVocabulary = computed(() => {
+          const searchTerm = search.value.toLowerCase();
+          return vocabulary.value.filter(word => 
+            word.spanish.toLowerCase().includes(searchTerm) ||
+            word.chinese.toLowerCase().includes(searchTerm)
+          );
+        });
 
-   // Add VocabularyCard component
-   Vue.component('vocabulary-card', {
-     props: ['vocab'],
-     template: `
-       <div class="rt-Card p-4 bg-accent/50 hover:bg-accent/60 transition-colors cursor-pointer">
-         <div class="flex justify-between items-start gap-4">
-           <div class="flex-1">
-             <div class="flex items-center gap-2 mb-2">
-               <p class="font-semibold text-lg tracking-wide">{{ vocab.word }}</p>
-               <span class="rt-Badge" :class="getUsageTypeClass(vocab.usage_type)">
-                 {{ vocab.usage_type }}
-               </span>
-             </div>
-             <p class="text-base text-muted-foreground font-medium">
-               {{ vocab.translation }}
-             </p>
-           </div>
-         </div>
-       </div>
-     `,
-     methods: {
-       getUsageTypeClass(type) {
-         return {
-           '正式': 'bg-blue-100 text-blue-700',
-           '口语': 'bg-green-100 text-green-700',
-           '习语': 'bg-purple-100 text-purple-700'
-         }[type] || '';
-       }
-     }
-   });
- 
-   new Vue({
-     el: '#app',
-     data: {
-       userInput: '',
-       messages: [],
-       vocabulary: [],
-       searchQuery: '',
-       filterType: '',
-       showVocabulary: false,
-       darkMode: false,
-       toasts: [],
-       editingVocabulary: null,
-       addingTagVocabulary: null,
-       newTag: '',
-       darkModeMediaQuery: null,
-       retryAttempts: 0,
-       maxRetryAttempts: 3,
-       isRecovering: false,
-       expandedWords: new Set(),
-       viewMode: 'list',
-       sortOrder: 'newest',
-       selectedVocab: null,
-       isTyping: false,
-       sending: false,
-       input: '',
-       typingTimeout: null
-     },
-     computed: {
-       filteredVocabulary() {
-         return this.vocabulary.filter(word => {
-           const matchesSearch = word.spanish.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                                 word.chinese.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                                 word.tags.some(tag => tag.toLowerCase().includes(this.searchQuery.toLowerCase()));
-           const matchesType = this.filterType ? word.type === this.filterType : true;
-           return matchesSearch && matchesType;
-         });
-       }
-     },
-     methods: {
-       capitalize(str) {
-         return str.charAt(0).toUpperCase() + str.slice(1);
-       },
-       async sendMessage() {
-         if (this.userInput.trim() === '') return;
- 
-         // Add user message
-         this.messages.push({
-           id: Date.now(),
-           sender: 'user',
-           content: this.formatMessage(this.userInput, 'user')
-         });
-         const userMessage = this.userInput;
-         this.userInput = '';
- 
-         // Scroll to bottom
-         this.$nextTick(() => {
-           this.scrollToBottom();
-         });
- 
-         // Generate prompt based on message language
-         const prompt = this.generatePrompt(userMessage);
- 
-         // Show loading toast
-         this.showToast('Procesando tu mensaje...', 'info');
- 
-         // Call AI API
-         try {
-           const aiResponse = await this.getAIResponse(prompt);
- 
-           // Remove loading toast
-           this.toasts = this.toasts.filter(toast => toast.id !== aiResponse.loadingId);
- 
-           // Add AI message
-           this.messages.push({
-             id: Date.now(),
-             sender: 'ai',
-             content: this.formatMessage(aiResponse.responseText, 'ai')
-           });
- 
-           // Update Vocabulary
-           if (aiResponse.vocabulary && aiResponse.vocabulary.length > 0) {
-             aiResponse.vocabulary.forEach(vocabItem => {
-               // Assign unique ID
-               vocabItem.id = Date.now() + Math.random();
-               // Initialize tags
-               vocabItem.tags = vocabItem.tags || [];
-               // Add to vocabulary list
-               this.vocabulary.push(vocabItem);
-             });
-           }
- 
-           // Scroll to bottom
-           this.$nextTick(() => {
-             this.scrollToBottom();
-           });
- 
-           // Show success toast
-           this.showToast('Mensaje procesado correctamente.', 'success');
-         } catch (error) {
-           console.error(error);
-           // Remove loading toast
-           this.toasts = this.toasts.filter(toast => toast.id !== aiResponse.loadingId);
- 
-           // Add error message
-           this.messages.push({
-             id: Date.now(),
-             sender: 'ai',
-             content: '<p>Error al obtener la respuesta del AI. Por favor, intenta nuevamente.</p>'
-           });
- 
-           // Show error toast
-           this.showToast('Error al procesar tu mensaje.', 'error');
-         }
-       },
-       generatePrompt(message) {
-         const chinesePattern = /[\u4e00-\u9fff]/;
-         const isChinese = chinesePattern.test(message);
-         
-         if (isChinese) {
-           return `As a Spanish language expert, translate this Chinese text to Spanish and analyze it:
-           
-           Text: "${message}"
-           
-           Please provide a response in the following JSON format:
-           {
-             "translation": "Spanish translation here",
-             "vocabulary": [
-               {
-                 "spanish": "difficult word or phrase",
-                 "chinese": "对应的中文",
-                 "type": "word/idiom/expression",
-                 "examples": ["Example sentence 1", "Example sentence 2"],
-                 "explanation": "Detailed explanation in Chinese",
-                 "level": "B1/B2/C1",
-                 "tags": ["grammar", "colloquial", "formal", etc]
-               }
-             ],
-             "grammar_notes": ["Any relevant grammar explanations in Chinese"],
-             "cultural_notes": ["Any cultural context or usage notes in Chinese"]
-           }`;
-         } else {
-           return `As a Chinese language expert, translate this Spanish text to Chinese and analyze it:
-           
-           Text: "${message}"
-           
-           Please provide a response in the following JSON format:
-           {
-             "translation": "Chinese translation here",
-             "vocabulary": [
-               {
-                 "spanish": "palabra o frase difícil",
-                 "chinese": "Chinese translation",
-                 "type": "word/idiom/expression",
-                 "examples": ["Example sentence 1", "Example sentence 2"],
-                 "explanation": "Detailed explanation in Spanish",
-                 "level": "B1/B2/C1",
-                 "tags": ["grammar", "colloquial", "formal", etc]
-               }
-             ],
-             "grammar_notes": ["Any relevant grammar explanations in Spanish"],
-             "cultural_notes": ["Any cultural context or usage notes in Spanish"]
-           }`;
-         }
-       },
-       async getAIResponse(prompt) {
-         const loadingId = Date.now() + Math.random();
-         this.showToast('Procesando tu mensaje...', 'info', loadingId);
- 
-         try {
-           const responseText = await API.callOpenAI(prompt);
-           let parsedResponse;
-           
-           try {
-             parsedResponse = JSON.parse(responseText);
-           } catch (error) {
-             console.error('Error parsing AI response:', error);
-             // Add fallback response structure
-             parsedResponse = {
-               translation: "Lo siento, hubo un error al procesar la respuesta.",
-               vocabulary: [],
-               grammar_notes: [],
-               cultural_notes: []
-             };
-           }
- 
-           // Validate response structure
-           if (!parsedResponse.translation) {
-             throw new Error('Invalid response structure: missing translation');
-           }
- 
-           // Process the response with validation
-           const processedResponse = {
-             responseText: parsedResponse.translation,
-             vocabulary: (parsedResponse.vocabulary || []).map(item => ({
-               id: Date.now() + Math.random(),
-               spanish: item.spanish || '',
-               chinese: item.chinese || '',
-               type: item.type || 'word',
-               examples: Array.isArray(item.examples) ? item.examples : [],
-               timestamp: new Date().toLocaleString(),
-               tags: [...(Array.isArray(item.tags) ? item.tags : []), item.level || 'B1'],
-               explanation: item.explanation || ''
-             })),
-             grammar_notes: Array.isArray(parsedResponse.grammar_notes) ? parsedResponse.grammar_notes : [],
-             cultural_notes: Array.isArray(parsedResponse.cultural_notes) ? parsedResponse.cultural_notes : [],
-             loadingId
-           };
- 
-           return processedResponse;
-         } catch (error) {
-           console.error('AI Response Error:', error);
-           throw error;
-         }
-       },
-       extractVocabularyFromResponse(responseData) {
-         // Already handled in getAIResponse
-         return responseData.vocabulary;
-       },
-       formatMessage(content, sender) {
-         if (sender === 'ai') {
-           return content; // The content is already formatted in getAIResponse
-         }
-         return `<p>${content}</p>`;
-       },
-       handleImageUpload(event) {
-         const file = event.target.files[0];
-         if (!file) return;
- 
-         // Validate file type
-         if (!file.type.startsWith('image/')) {
-           this.showToast('Por favor, sube un archivo de imagen válido.', 'error');
-           return;
-         }
- 
-         // Add loading toast
-         this.showToast('Procesando imagen...', 'info');
- 
-         // Perform OCR using Tesseract.js
-         Tesseract.recognize(
-           file,
-           'spa',
-           { logger: m => console.log(m) }
-         ).then(({ data: { text } }) => {
-           // Remove loading toast
-           this.removeLastToast();
- 
-           // Set extracted text as user input and send it
-           this.userInput = text.trim();
-           this.sendMessage();
-         }).catch(error => {
-           console.error(error);
-           this.removeLastToast();
-           this.showToast('Error al procesar la imagen. Por favor, intenta nuevamente.', 'error');
-         });
-       },
-       async handleAudioUpload(event) {
-         const file = event.target.files[0];
-         if (!file) return;
- 
-         // Validate file type
-         if (!file.type.startsWith('audio/')) {
-           this.showToast('Por favor, sube un archivo de audio válido.', 'error');
-           return;
-         }
- 
-         // Add loading toast
-         this.showToast('Transcribiendo audio...', 'info');
- 
-         try {
-           // Convert audio file to base64
-           const base64Audio = await this.convertToBase64(file);
-           const base64Data = base64Audio.split(',')[1];
- 
-           // Call Hugging Face Whisper model for transcription
-           const transcriptionResponse = await axios.post(
-             'https://api-inference.huggingface.co/models/openai/whisper-base',
-             {
-               inputs: base64Data,
-               options: { wait_for_model: true }
-             },
-             {
-               headers: {
-                 Authorization: `Bearer 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`,
-                 'Content-Type': 'application/json'
-               }
-             }
-           );
- 
-           if (transcriptionResponse.status !== 200) {
-             throw new Error(`Transcription API error: ${transcriptionResponse.statusText}`);
-           }
- 
-           const transcriptionText = transcriptionResponse.data.text;
- 
-           // Remove loading toast
-           this.removeLastToast();
- 
-           if (!transcriptionText) {
-             throw new Error('No se pudo transcribir el audio.');
-           }
- 
-           // Set transcribed text as user input and send it
-           this.userInput = transcriptionText.trim();
-           this.sendMessage();
- 
-         } catch (error) {
-           console.error(error);
-           this.removeLastToast();
-           this.showToast('Error al transcribir el audio. Por favor, intenta nuevamente.', 'error');
-         }
-       },
-       convertToBase64(file) {
-         return new Promise((resolve, reject) => {
-           const reader = new FileReader();
-           reader.readAsDataURL(file);
-           reader.onload = () => resolve(reader.result);
-           reader.onerror = error => reject(error);
-         });
-       },
-       toggleVocabulary() {
-         this.showVocabulary = !this.showVocabulary;
-         if (this.showVocabulary) {
-           document.body.style.overflow = 'hidden';
-           // Force mobile view refresh
-           this.$nextTick(() => {
-             window.dispatchEvent(new Event('resize'));
-           });
-         } else {
-           document.body.style.overflow = 'auto';
-         }
-       },
-       scrollToBottom() {
-         const container = this.$refs.chatContainer;
-         if (container) {
-           container.scrollTop = container.scrollHeight;
-         }
-       },
-       showToast(message, type = 'info', id = null) {
-         const toastId = id || Date.now() + Math.random();
-         this.toasts = this.toasts.filter(t => t.type !== type);
-         this.toasts.push({ id: toastId, message, type });
-         setTimeout(() => {
-           this.removeToast(toastId);
-         }, 5000);
-       },
-       removeToast(id) {
-         this.toasts = this.toasts.filter(toast => toast.id !== id);
-       },
-       removeLastToast() {
-         this.toasts.pop();
-       },
-       copyToClipboard(word) {
-         const textToCopy = `
- Palabra: ${word.spanish}
- Traducción: ${word.chinese}
- Tipo: ${this.capitalize(word.type)}
- Ejemplos:
- ${word.examples.map((ex, i) => `${i + 1}. ${ex}`).join('\n')}
- ${word.explanation ? `\nExplicación: ${word.explanation}` : ''}
- ${word.tags.length ? `\nEtiquetas: ${word.tags.join(', ')}` : ''}
-         `.trim();
- 
-         navigator.clipboard.writeText(textToCopy)
-           .then(() => {
-             this.showToast('Vocabulario copiado al portapapeles', 'success');
-           })
-           .catch(err => {
-             console.error('Error al copiar:', err);
-             this.showToast('Error al copiar al portapapeles', 'error');
-           });
-       },
-       editVocabulary(word) {
-         this.editingVocabulary = {
-           ...word,
-           examplesText: word.examples.join(', '),
-           tagsText: word.tags.join(', ')
-         };
-       },
-       updateVocabulary() {
-         if (!this.editingVocabulary) return;
- 
-         const index = this.vocabulary.findIndex(vocab => vocab.id === this.editingVocabulary.id);
-         if (index !== -1) {
-           const updatedVocab = {
-             ...this.vocabulary[index],
-             spanish: this.editingVocabulary.spanish,
-             chinese: this.editingVocabulary.chinese,
-             examples: this.editingVocabulary.examplesText.split(',').map(ex => ex.trim()),
-             type: this.editingVocabulary.type,
-             tags: this.editingVocabulary.tagsText ? this.editingVocabulary.tagsText.split(',').map(tag => tag.trim()) : []
-           };
-           
-           try {
-             // Save to database
-             API.saveToDatabase(updatedVocab);
-             // Update local state
-             this.$set(this.vocabulary, index, updatedVocab);
-             // Update localStorage
-             localStorage.setItem('vocabulary', JSON.stringify(this.vocabulary));
-             this.showToast('Vocabulario actualizado correctamente', 'success');
-           } catch (error) {
-             console.error('Error updating vocabulary:', error);
-             this.showToast('Error al actualizar el vocabulario', 'error');
-           }
-           
-           this.editingVocabulary = null;
-         }
-       },
-       cancelEdit() {
-         this.editingVocabulary = null;
-       },
-       deleteVocabulary(id) {
-         if (confirm('¿Estás seguro de que deseas eliminar este vocabulario?')) {
-           try {
-             // Delete from database
-             API.deleteFromDatabase(id);
-             // Update local state
-             this.vocabulary = this.vocabulary.filter(vocab => vocab.id !== id);
-             // Update localStorage
-             localStorage.setItem('vocabulary', JSON.stringify(this.vocabulary));
-             this.showToast('Vocabulario eliminado correctamente', 'success');
-           } catch (error) {
-             console.error('Error deleting vocabulary:', error);
-             this.showToast('Error al eliminar el vocabulario', 'error');
-           }
-         }
-       },
-       addTag(word) {
-         this.addingTagVocabulary = word;
-         this.newTag = '';
-       },
-       addTagToVocabulary() {
-         if (!this.addingTagVocabulary || !this.newTag.trim()) return;
- 
-         const index = this.vocabulary.findIndex(vocab => vocab.id === this.addingTagVocabulary.id);
-         if (index !== -1) {
-           if (!this.vocabulary[index].tags.includes(this.newTag.trim())) {
-             this.vocabulary[index].tags.push(this.newTag.trim());
-             // Save to localStorage
-             this.saveVocabulary();
-             // Show success toast
-             this.showToast('Etiqueta añadida correctamente.', 'success');
-           } else {
-             this.showToast('Esta etiqueta ya existe.', 'error');
-           }
-         }
- 
-         // Clear addingTagVocabulary
-         this.addingTagVocabulary = null;
-         this.newTag = '';
-       },
-       cancelAddTag() {
-         this.addingTagVocabulary = null;
-         this.newTag = '';
-       },
-       toggleDarkMode() {
-         this.darkMode = !this.darkMode;
-         this.applyDarkMode();
-       },
-       applyDarkMode() {
-         document.documentElement.classList.toggle('dark', this.darkMode);
-         localStorage.setItem('darkMode', JSON.stringify(this.darkMode));
-         
-         // Update meta theme-color
-         const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-         if (metaThemeColor) {
-           metaThemeColor.setAttribute('content', this.darkMode ? '#1F2937' : '#ffffff');
-         }
-       },
-       loadDarkMode() {
-         const savedMode = localStorage.getItem('darkMode');
-         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-         
-         this.darkMode = savedMode !== null ? JSON.parse(savedMode) : prefersDark;
-         this.applyDarkMode();
-       },
-       async saveVocabulary() {
-         try {
-           // Save to database
-           await API.saveToDatabase(this.vocabulary);
-           // Also save to localStorage as backup
-           localStorage.setItem('vocabulary', JSON.stringify(this.vocabulary));
-           this.showToast('Vocabulario guardado correctamente', 'success');
-         } catch (error) {
-           console.error('Error saving vocabulary:', error);
-           this.showToast('Error al guardar el vocabulario', 'error');
-           // Save to localStorage as fallback
-           localStorage.setItem('vocabulary', JSON.stringify(this.vocabulary));
-         }
-       },
-       async loadVocabulary() {
-         try {
-           const dbVocabulary = await API.syncWithDatabase();
-           if (dbVocabulary && dbVocabulary.length > 0) {
-             this.vocabulary = dbVocabulary;
-             this.showToast('Vocabulary loaded successfully', 'success');
-           } else {
-             // Load from localStorage as fallback
-             const savedVocab = localStorage.getItem('vocabulary');
-             if (savedVocab) {
-               this.vocabulary = JSON.parse(savedVocab);
-               // Try to sync localStorage data to database
-               this.vocabulary.forEach(async (item) => {
-                 await API.saveToDatabase(item);
-               });
-             }
-           }
-         } catch (error) {
-           console.error('Error loading vocabulary:', error);
-           this.showToast('Error loading vocabulary', 'error');
-           // Load from localStorage as fallback
-           const savedVocab = localStorage.getItem('vocabulary');
-           if (savedVocab) {
-             this.vocabulary = JSON.parse(savedVocab);
-           }
-         }
-       },
-       handleSystemDarkModeChange(e) {
-         if (localStorage.getItem('darkMode') === null) {
-           this.darkMode = e.matches;
-         }
-       },
-       saveToLocalStorage() {
-         try {
-           localStorage.setItem('messages', JSON.stringify(this.messages));
-           localStorage.setItem('vocabulary', JSON.stringify(this.vocabulary));
-         } catch (error) {
-           console.error('Error saving to localStorage:', error);
-           this.showToast('Error saving data locally', 'error');
-         }
-       },
-       loadFromLocalStorage() {
-         try {
-           const savedMessages = localStorage.getItem('messages');
-           const savedVocabulary = localStorage.getItem('vocabulary');
-           
-           if (savedMessages) {
-             this.messages = JSON.parse(savedMessages);
-           }
-           
-           if (savedVocabulary) {
-             this.vocabulary = JSON.parse(savedVocabulary);
-           }
-         } catch (error) {
-           console.error('Error loading from localStorage:', error);
-           this.showToast('Error loading saved data', 'error');
-         }
-       },
-       autoSave() {
-         this.saveToLocalStorage();
-         this.showToast('Datos guardados automáticamente', 'info');
-       },
-       handleOrientationChange() {
-         if (window.innerWidth >= 768) {
-           this.showVocabulary = false;
-           document.body.style.overflow = 'auto';
-         }
-       },
-       async retryOperation(operation, ...args) {
-         this.retryAttempts = 0;
-         while (this.retryAttempts < this.maxRetryAttempts) {
-           try {
-             return await operation(...args);
-           } catch (error) {
-             this.retryAttempts++;
-             if (this.retryAttempts === this.maxRetryAttempts) {
-               throw error;
-             }
-             await new Promise(resolve => setTimeout(resolve, 1000 * this.retryAttempts));
-           }
-         }
-       },
-       async recoverFromError() {
-         if (this.isRecovering) return;
-         this.isRecovering = true;
-         
-         try {
-           await this.loadVocabulary();
-           this.showToast('Recuperación exitosa', 'success');
-         } catch (error) {
-           this.showToast('Error en la recuperación', 'error');
-         } finally {
-           this.isRecovering = false;
-         }
-       },
-       toggleWordDetails(wordId) {
-         if (this.expandedWords.has(wordId)) {
-           this.expandedWords.delete(wordId);
-         } else {
-           this.expandedWords.add(wordId);
-         }
-       },
-       isWordExpanded(wordId) {
-         return this.expandedWords.has(wordId);
-       },
-       toggleView() {
-         this.viewMode = this.viewMode === 'list' ? 'grid' : 'list';
-       },
-       toggleSort() {
-         this.sortOrder = this.sortOrder === 'newest' ? 'oldest' : 'newest';
-         this.vocabulary = [...this.vocabulary].reverse();
-       },
-       showVocabDetails(vocab) {
-         this.selectedVocab = vocab;
-       },
-       handleTyping(e) {
-         this.input = e.target.value;
-         this.isTyping = true;
-         
-         if (this.typingTimeout) {
-           clearTimeout(this.typingTimeout);
-         }
-         
-         this.typingTimeout = setTimeout(() => {
-           this.isTyping = false;
-         }, 1000);
-       },
-       scrollToBottom() {
-         const container = this.$el.querySelector('.chat-container');
-         if (container) {
-           container.scrollTop = container.scrollHeight;
-         }
-       },
-       formatMessage(content, role) {
-         return role === 'ai' ? content : `<p>${content}</p>`;
-       },
-       generatePrompt(message) {
-         const chinesePattern = /[\u4e00-\u9fff]/;
-         const isChinese = chinesePattern.test(message);
-         
-         return isChinese ? 
-           `Translate Chinese to Spanish: ${message}` :
-           `Translate Spanish to Chinese: ${message}`;
-       }
-     },
-     created() {
-       this.loadVocabulary();
-       this.loadDarkMode();
-       
-       // Add system dark mode detection
-       this.darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-       this.darkModeMediaQuery.addEventListener('change', this.handleSystemDarkModeChange);
-       
-       // Set initial dark mode if not set
-       if (localStorage.getItem('darkMode') === null) {
-         this.darkMode = this.darkModeMediaQuery.matches;
-       }
- 
-       // Set up auto-save
-       setInterval(this.autoSave, 300000); // Auto-save every 5 minutes
- 
-       // Load saved data
-       this.loadFromLocalStorage();
- 
-       // Initialize dark mode
-       document.documentElement.classList.toggle('dark', this.darkMode);
- 
-       window.addEventListener('resize', this.handleOrientationChange);
-     },
-     beforeDestroy() {
-       window.removeEventListener('resize', this.handleOrientationChange);
-     }
-   });
- </script>
- <!-- Custom Styles -->
- <style>
-   .fade-enter-active, .fade-leave-active {
-     transition: all 0.5s;
-   }
-   .fade-enter, .fade-leave-to {
-     opacity: 0;
-     transform: translateY(20px);
-   }
-   /* Responsive Adjustments */
-   @media (max-width: 767px) {
-     aside {
-       display: none;
-     }
-   }
-   .toast-container {
-     position: fixed;
-     top: 1rem;
-     right: 1rem;
-     z-index: 50;
-     display: flex;
-     flex-direction: column;
-     gap: 0.5rem;
-   }
- 
-   .toast {
-     padding: 1rem;
-     border-radius: 0.5rem;
-     background-color: white;
-     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-     display: flex;
-     align-items: center;
-     justify-content: space-between;
-     min-width: 300px;
-   }
- 
-   .toast-info {
-     border-left: 4px solid #3b82f6;
-   }
- 
-   .toast-success {
-     border-left: 4px solid #10b981;
-   }
- 
-   .toast-error {
-     border-left: 4px solid #ef4444;
-   }
- 
-   .dark .toast {
-     background-color: #374151;
-     color: white;
-   }
- 
-   .fade-enter-active, 
-   .fade-leave-active {
-     transition: all 0.3s ease;
-   }
- 
-   .fade-enter-from, 
-   .fade-leave-to {
-     opacity: 0;
-     transform: translateX(30px);
-   }
- 
-   /* Add to existing styles */
-   .translation-result {
-     @apply space-y-4;
-   }
- 
-   .grammar-notes,
-   .cultural-notes {
-     @apply bg-gray-100 dark:bg-gray-700 p-4 rounded-lg;
-   }
- 
-   .grammar-notes h4,
-   .cultural-notes h4 {
-     @apply text-lg font-bold mb-2;
-   }
- 
-   .grammar-notes ul,
-   .cultural-notes ul {
-     @apply list-disc list-inside;
-   }
- 
-   .vocabulary-item {
-     @apply border-l-4 border-blue-500 pl-4 my-2;
-   }
- 
-   .vocabulary-explanation {
-     @apply text-sm text-gray-600 dark:text-gray-400;
-   }
- 
-   .mobile-vocabulary {
-     @apply fixed inset-0 bg-white dark:bg-gray-800 z-50 overflow-y-auto;
-     transform: translateX(100%);
-     transition: transform 0.3s ease-in-out;
-   }
- 
-   .mobile-vocabulary.active {
-     transform: translateX(0);
-   }
- 
-   .chat-container {
-     @apply flex-1 overflow-y-auto mb-4 p-4;
-     scroll-behavior: smooth;
-   }
- 
-   .message-bubble {
-     @apply max-w-[80%] rounded-lg p-3 mb-2;
-   }
- 
-   .user-message {
-     @apply bg-orange-200 dark:bg-orange-700 ml-auto;
-   }
- 
-   .ai-message {
-     @apply bg-blue-200 dark:bg-blue-700;
-   }
- 
-   .vocabulary-card {
-     @apply bg-white dark:bg-gray-700 rounded-lg shadow-md p-4 mb-4 transition-all duration-200;
-   }
- 
-   .vocabulary-card:hover {
-     @apply shadow-lg transform -translate-y-1;
-   }
- 
-   .button-icon {
-     @apply w-5 h-5 inline-block align-middle;
-   }
- 
-   .modal-overlay {
-     @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
-   }
- 
-   .modal-content {
-     @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-11/12 max-w-2xl;
-   }
- 
-   .input-field {
-     @apply w-full border dark:border-gray-600 rounded-lg p-2 mb-4 focus:ring-2 focus:ring-blue-500;
-   }
- 
-   .rt-ScrollArea {
-     max-height: calc(100vh - 200px);
-     overflow-y: auto;
-   }
- 
-   .rt-Card {
-     border: 1px solid var(--accent-6);
-     border-radius: 8px;
-     transition: all 0.2s ease;
-   }
- 
-   .rt-Card:hover {
-     border-color: var(--accent-8);
-     transform: translateY(-1px);
-     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-   }
- 
-   .rt-Badge {
-     font-size: 0.75rem;
-     padding: 2px 6px;
-     border-radius: 4px;
-     background-color: var(--accent-4);
-     color: var(--accent-11);
-   }
- 
-   .rt-IconButton {
-     padding: 4px;
-     border-radius: 4px;
-     transition: all 0.2s ease;
-   }
- 
-   .rt-IconButton:hover {
-     background-color: var(--accent-4);
-   }
- </style>
- <!-- Add after tailwind.config -->
- <script>
-   window.daisyui = {
-     themes: ["light", "dark"],
-   };
- </script>
- </body>
- </html>
- 
+        function toggleTheme() {
+          darkMode.value = !darkMode.value;
+          document.documentElement.classList.toggle('dark', darkMode.value);
+        }
+
+        function toggleVocabulary() {
+          showVocabulary.value = !showVocabulary.value;
+        }
+
+        function showWordDetails(word) {
+          selectedWord.value = word;
+        }
+
+        function addToast(message) {
+          const id = Date.now();
+          toasts.value.push({ id, message });
+          setTimeout(() => {
+            toasts.value = toasts.value.filter(t => t.id !== id);
+          }, 3000);
+        }
+
+        async function sendMessage() {
+          if (!userInput.value.trim() || loading.value) return;
+
+          const content = userInput.value;
+          userInput.value = '';
+          loading.value = true;
+
+          try {
+            const isChinese = /[\u4e00-\u9fff]/.test(content);
+            const message = {
+              id: Date.now(),
+              role: 'user',
+              content,
+              translation: isChinese ? await translateText(content, 'zh', 'es') : await translateText(content, 'es', 'zh')
+            };
+
+            messages.value.push(message);
+            await nextTick();
+            scrollToBottom();
+
+            // Simulate AI response
+            setTimeout(async () => {
+              const aiMessage = {
+                id: Date.now(),
+                role: 'ai',
+                content: isChinese ? '¡Hola! ¿Cómo estás?' : '你好！最近怎么样？',
+                translation: isChinese ? '你好！你好吗？' : 'Hello! How are you?',
+                vocabulary: [
+                  {
+                    id: Date.now(),
+                    spanish: '¿Cómo estás?',
+                    chinese: '你好吗？',
+                    type: '问候语',
+                    examples: [
+                      '¿Cómo estás hoy?',
+                      '¿Cómo está usted?'
+                    ]
+                  }
+                ]
+              };
+
+              messages.value.push(aiMessage);
+              aiMessage.vocabulary.forEach(word => {
+                if (!vocabulary.value.some(v => v.spanish === word.spanish)) {
+                  vocabulary.value.push(word);
+                  addToast(`新词汇已添加：${word.spanish}`);
+                }
+              });
+
+              await nextTick();
+              scrollToBottom();
+              loading.value = false;
+            }, 1000);
+
+          } catch (error) {
+            console.error('Error sending message:', error);
+            addToast('发送消息时出错');
+            loading.value = false;
+          }
+        }
+
+        async function translateText(text, from, to) {
+          // Simulate translation API call
+          return new Promise(resolve => {
+            setTimeout(() => {
+              resolve(from === 'zh' ? '¡Hola! ¿Cómo estás?' : '你好！你好吗？');
+            }, 500);
+          });
+        }
+
+        function scrollToBottom() {
+          if (chatMessages.value) {
+            chatMessages.value.scrollTop = chatMessages.value.scrollHeight;
+          }
+        }
+
+        onMounted(() => {
+          // Check system theme preference
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            darkMode.value = true;
+            document.documentElement.classList.add('dark');
+          }
+        });
+
+        return {
+          messages,
+          vocabulary,
+          userInput,
+          loading,
+          darkMode,
+          showVocabulary,
+          selectedWord,
+          search,
+          toasts,
+          chatMessages,
+          filteredVocabulary,
+          toggleTheme,
+          toggleVocabulary,
+          showWordDetails,
+          sendMessage
+        };
+      }
+    }).mount('#app');
+  </script>
 </body>
 </html>
