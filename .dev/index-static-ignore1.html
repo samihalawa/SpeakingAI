@@ -3,140 +3,380 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LanguagAI - Plataforma de Aprendizaje de Español</title>
+  <meta name="description" content="SamitoAI - Spanish to Chinese Learning Assistant">
+  <title>SamitoAI - Learn Spanish with AI</title>
   
   <!-- Dependencies -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@2.0.0/styles.css">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Custom CSS -->
   <style>
     /* Base Theme Variables */
     :root {
-      --background: 0 0% 100%;
-      --foreground: 222.2 84% 4.9%;
-      --card: 0 0% 100%;
-      --card-foreground: 222.2 84% 4.9%;
-      --popover: 0 0% 100%;
-      --popover-foreground: 222.2 84% 4.9%;
-      --primary: 221.2 83.2% 53.3%;
-      --primary-foreground: 210 40% 98%;
-      --secondary: 210 40% 96.1%;
-      --secondary-foreground: 222.2 47.4% 11.2%;
-      --muted: 210 40% 96.1%;
-      --muted-foreground: 215.4 16.3% 46.9%;
-      --accent: 210 40% 96.1%;
-      --accent-foreground: 222.2 47.4% 11.2%;
-      --destructive: 0 84.2% 60.2%;
-      --destructive-foreground: 210 40% 98%;
-      --border: 214.3 31.8% 91.4%;
-      --input: 214.3 31.8% 91.4%;
-      --ring: 221.2 83.2% 53.3%;
-      --radius: 0.5rem;
+      --primary-color: #6366F1;
+      --primary-hover: #4F46E5;
+      --secondary-color: #14B8A6;
+      --accent-color: #F59E0B;
+      --background-light: #F9FAFB;
+      --card-light: #FFFFFF;
+      --background-dark: #111827;
+      --card-dark: #1F2937;
+      --text-light: #374151;
+      --text-dark: #F3F4F6;
+      --border-light: #E5E7EB;
+      --border-dark: #374151;
+      --success: #10B981;
+      --error: #EF4444;
+      --warning: #F59E0B;
+      --info: #3B82F6;
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      --transition: all 0.2s ease;
     }
 
-    .dark {
-      --background: 222.2 84% 4.9%;
-      --foreground: 210 40% 98%;
-      --card: 222.2 84% 4.9%;
-      --card-foreground: 210 40% 98%;
-      --popover: 222.2 84% 4.9%;
-      --popover-foreground: 210 40% 98%;
-      --primary: 217.2 91.2% 59.8%;
-      --primary-foreground: 222.2 47.4% 11.2%;
-      --secondary: 217.2 32.6% 17.5%;
-      --secondary-foreground: 210 40% 98%;
-      --muted: 217.2 32.6% 17.5%;
-      --muted-foreground: 215 20.2% 65.1%;
-      --accent: 217.2 32.6% 17.5%;
-      --accent-foreground: 210 40% 98%;
-      --destructive: 0 62.8% 30.6%;
-      --destructive-foreground: 210 40% 98%;
-      --border: 217.2 32.6% 17.5%;
-      --input: 217.2 32.6% 17.5%;
-      --ring: 224.3 76.3% 48%;
-    }
-
-    /* Base Styles */
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background-color: hsl(var(--background));
-      color: hsl(var(--foreground));
+    /* Modern Reset & Base Styles */
+    * {
       margin: 0;
-      min-height: 100vh;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--background-light);
+      color: var(--text-light);
+      line-height: 1.5;
+      transition: var(--transition);
+    }
+
+    body.dark {
+      background-color: var(--background-dark);
+      color: var(--text-dark);
     }
 
     /* Layout */
     .app-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      min-height: 100vh;
       display: grid;
       grid-template-rows: auto 1fr;
-      min-height: 100vh;
     }
 
+    /* Header */
+    .app-header {
+      padding: 1rem 1.5rem;
+      background-color: var(--card-light);
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dark .app-header {
+      background-color: var(--card-dark);
+      border-bottom-color: var(--border-dark);
+    }
+
+    .app-logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .app-logo i {
+      font-size: 1.75rem;
+    }
+
+    .theme-toggle {
+      padding: 0.5rem;
+      border: none;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover {
+      background-color: var(--background-light);
+    }
+
+    .dark .theme-toggle:hover {
+      background-color: var(--background-dark);
+    }
+
+    /* Main Content */
     .main-content {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1rem;
-      padding: 1rem;
+      grid-template-columns: 1fr 320px;
+      gap: 1.5rem;
+      padding: 1.5rem;
       height: calc(100vh - 4rem);
     }
 
-    @media (max-width: 768px) {
-      .main-content {
-        grid-template-columns: 1fr;
-      }
-      
-      .vocabulary-section {
-        display: none;
-      }
-      
-      .vocabulary-section.active {
-        display: block;
-        position: fixed;
-        inset: 0;
-        z-index: 50;
-        background: hsl(var(--background));
-      }
-    }
-
-    /* Components */
+    /* Chat Section */
     .chat-section {
+      background: var(--card-light);
+      border-radius: var(--radius-lg);
       display: flex;
       flex-direction: column;
-      height: 100%;
       overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+
+    .dark .chat-section {
+      background: var(--card-dark);
     }
 
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
-    }
-
-    .message-input {
-      padding: 1rem;
-      border-top: 1px solid hsl(var(--border));
+      padding: 1.5rem;
+      scroll-behavior: smooth;
     }
 
     .message {
-      margin-bottom: 1rem;
-      padding: 1rem;
-      border-radius: var(--radius);
-      background: hsl(var(--card));
-      border: 1px solid hsl(var(--border));
+      max-width: 85%;
+      margin-bottom: 1.5rem;
+      animation: slideIn 0.3s ease-out;
     }
 
     .message.user {
       margin-left: auto;
-      background: hsl(var(--primary));
-      color: hsl(var(--primary-foreground));
-      max-width: 80%;
+      background: var(--primary-color);
+      color: white;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 var(--radius-lg);
+      padding: 1rem 1.25rem;
     }
 
     .message.ai {
       margin-right: auto;
-      max-width: 80%;
+      background: var(--background-light);
+      border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 0;
+      padding: 1rem 1.25rem;
+    }
+
+    .dark .message.ai {
+      background: var(--background-dark);
+    }
+
+    .message-content {
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .message-translation {
+      font-size: 0.9375rem;
+      opacity: 0.9;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .message.ai .message-translation {
+      border-top-color: var(--border-light);
+    }
+
+    .dark .message.ai .message-translation {
+      border-top-color: var(--border-dark);
+    }
+
+    .grammar-notes {
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: var(--info);
+    }
+
+    .vocabulary-highlights {
+      margin-top: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .vocabulary-word {
+      padding: 0.25rem 0.75rem;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      color: var(--primary-color);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .dark .vocabulary-word {
+      background: rgba(99, 102, 241, 0.2);
+    }
+
+    .vocabulary-word:hover {
+      background: rgba(99, 102, 241, 0.2);
+    }
+
+    .message-input {
+      padding: 1rem 1.25rem;
+      background: var(--card-light);
+      border-top: 1px solid var(--border-light);
+    }
+
+    .dark .message-input {
+      background: var(--card-dark);
+      border-top-color: var(--border-dark);
+    }
+
+    .input-form {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .input-field {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      background: var(--background-light);
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .dark .input-field {
+      background: var(--background-dark);
+      border-color: var(--border-dark);
+      color: var(--text-dark);
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .send-button {
+      padding: 0.75rem 1.5rem;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .send-button:hover {
+      background: var(--primary-hover);
+    }
+
+    .send-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Vocabulary Section */
+    .vocabulary-section {
+      background: var(--card-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-md);
+    }
+
+    .dark .vocabulary-section {
+      background: var(--card-dark);
+    }
+
+    .vocabulary-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dark .vocabulary-header {
+      border-bottom-color: var(--border-dark);
+    }
+
+    .vocabulary-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: inherit;
+    }
+
+    .vocabulary-search {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .dark .vocabulary-search {
+      border-bottom-color: var(--border-dark);
+    }
+
+    .vocabulary-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1.25rem;
+    }
+
+    .vocabulary-item {
+      padding: 1rem;
+      background: var(--background-light);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .dark .vocabulary-item {
+      background: var(--background-dark);
+    }
+
+    .vocabulary-item:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .word-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .word-spanish {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .word-type {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: var(--radius-sm);
+      color: var(--primary-color);
+    }
+
+    .word-chinese {
+      font-size: 0.9375rem;
+      color: inherit;
     }
 
     /* Animations */
@@ -151,207 +391,236 @@
       }
     }
 
-    .slide-in {
-      animation: slideIn 0.2s ease-out;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
-    /* Utilities */
-    .hidden {
-      display: none;
-    }
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
 
-    .flex {
-      display: flex;
-    }
+      .vocabulary-section {
+        display: none;
+      }
 
-    .flex-col {
-      flex-direction: column;
-    }
+      .vocabulary-section.active {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+      }
 
-    .items-center {
-      align-items: center;
-    }
+      .message {
+        max-width: 90%;
+      }
 
-    .justify-between {
-      justify-content: space-between;
-    }
+      .app-header {
+        padding: 0.75rem 1rem;
+      }
 
-    .gap-2 {
-      gap: 0.5rem;
-    }
-
-    /* Toast */
-    .toast-container {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      z-index: 100;
-    }
-
-    .toast {
-      padding: 1rem;
-      border-radius: var(--radius);
-      background: hsl(var(--background));
-      border: 1px solid hsl(var(--border));
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      margin-bottom: 0.5rem;
-      animation: slideIn 0.2s ease-out;
+      .main-content {
+        padding: 1rem;
+      }
     }
   </style>
 </head>
-<body>
+<body :class="{ dark: darkMode }">
   <div id="app" class="app-container">
-    <header class="flex items-center justify-between p-4 border-b border-[hsl(var(--border))]">
-      <h1 class="text-xl font-bold">LanguagAI Español</h1>
-      <button @click="toggleTheme" class="p-2 rounded hover:bg-[hsl(var(--accent))]">
-        {{ darkMode ? '☀️' : '🌙' }}
-      </button>
+    <header class="app-header">
+      <div class="app-logo">
+        <i class="mdi mdi-translate"></i>
+        <span>SamitoAI</span>
+      </div>
+      <div class="header-actions">
+        <button @click="toggleTheme" class="theme-toggle">
+          <i :class="['mdi', darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night']"></i>
+        </button>
+      </div>
     </header>
 
     <main class="main-content">
       <section class="chat-section">
         <div class="chat-messages" ref="chatMessages">
-          <template v-for="message in messages" :key="message.id">
-            <div :class="['message slide-in', message.role]">
-              <div class="message-content">{{ message.content }}</div>
-              <div v-if="message.translation" class="message-translation text-sm text-[hsl(var(--muted-foreground))]">
-                {{ message.translation }}
-              </div>
-              <div v-if="message.vocabulary?.length" class="vocabulary-highlights mt-2">
-                <div v-for="word in message.vocabulary" :key="word.id" 
-                     class="inline-block bg-[hsl(var(--accent))] rounded px-2 py-1 mr-2 mb-2 text-sm cursor-pointer"
-                     @click="showWordDetails(word)">
-                  {{ word.spanish }}
-                </div>
-              </div>
+          <div v-for="message in messages" :key="message.id" :class="['message', message.role]">
+            <div class="message-content">{{ message.content }}</div>
+            <div v-if="message.translation" class="message-translation">
+              {{ message.translation }}
             </div>
-          </template>
+            <div v-if="message.explanation" class="grammar-notes">
+              {{ message.explanation }}
+            </div>
+            <div v-if="message.vocabulary?.length" class="vocabulary-highlights">
+              <span v-for="word in message.vocabulary" 
+                    :key="word.id"
+                    class="vocabulary-word"
+                    @click="showWordDetails(word)">
+                {{ word.spanish }}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="message-input">
-          <form @submit.prevent="sendMessage" class="flex gap-2">
+          <form @submit.prevent="sendMessage" class="input-form">
             <input v-model="userInput" 
                    type="text" 
-                   placeholder="输入消息..." 
-                   class="flex-1 px-3 py-2 rounded border border-[hsl(var(--input))] bg-transparent"
-                   :disabled="loading">
+                   class="input-field"
+                   :placeholder="'输入西班牙语或中文...'"
+                   :disabled="loading"
+                   @keydown.enter.exact="sendMessage"
+                   @keydown.enter.shift.prevent="userInput += '\n'">
             <button type="submit" 
-                    class="px-4 py-2 rounded bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                    class="send-button"
                     :disabled="loading || !userInput.trim()">
-              发送
+              <i class="mdi mdi-send"></i>
+              <span>{{ loading ? '发送中...' : '发送' }}</span>
             </button>
           </form>
         </div>
       </section>
 
       <section class="vocabulary-section" :class="{ active: showVocabulary }">
-        <div class="flex items-center justify-between p-4 border-b border-[hsl(var(--border))]">
-          <h2 class="text-lg font-semibold">词汇表</h2>
-          <button @click="toggleVocabulary" class="md:hidden p-2">✕</button>
+        <div class="vocabulary-header">
+          <h2 class="vocabulary-title">生词本</h2>
+          <button @click="toggleVocabulary" class="theme-toggle">
+            <i class="mdi mdi-close"></i>
+          </button>
         </div>
 
-        <div class="p-4">
+        <div class="vocabulary-search">
           <input v-model="search" 
                  type="search" 
-                 placeholder="搜索词汇..." 
-                 class="w-full px-3 py-2 rounded border border-[hsl(var(--input))] bg-transparent mb-4">
+                 class="input-field"
+                 placeholder="搜索生词...">
+        </div>
 
-          <div class="vocabulary-list space-y-2">
-            <div v-for="word in filteredVocabulary" 
-                 :key="word.id" 
-                 class="p-3 rounded border border-[hsl(var(--border))] hover:border-[hsl(var(--ring))] cursor-pointer"
-                 @click="showWordDetails(word)">
-              <div class="flex justify-between items-start">
-                <div>
-                  <div class="font-medium">{{ word.spanish }}</div>
-                  <div class="text-sm text-[hsl(var(--muted-foreground))]">{{ word.chinese }}</div>
-                </div>
-                <div class="text-xs px-2 py-1 rounded bg-[hsl(var(--secondary))]">
-                  {{ word.type }}
-                </div>
-              </div>
+        <div class="vocabulary-list">
+          <div v-for="word in filteredVocabulary" 
+               :key="word.id" 
+               class="vocabulary-item"
+               @click="showWordDetails(word)">
+            <div class="word-header">
+              <span class="word-spanish">{{ word.spanish }}</span>
+              <span class="word-type">{{ word.type }}</span>
             </div>
+            <div class="word-chinese">{{ word.chinese }}</div>
           </div>
         </div>
       </section>
     </main>
-
-    <!-- Word Details Modal -->
-    <div v-if="selectedWord" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-      <div class="bg-[hsl(var(--background))] rounded-lg max-w-lg w-full p-6">
-        <div class="flex justify-between items-start mb-4">
-          <h3 class="text-lg font-semibold">{{ selectedWord.spanish }}</h3>
-          <button @click="selectedWord = null" class="p-2">✕</button>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <div class="text-sm text-[hsl(var(--muted-foreground))]">中文翻译</div>
-            <div>{{ selectedWord.chinese }}</div>
-          </div>
-
-          <div>
-            <div class="text-sm text-[hsl(var(--muted-foreground))]">例句</div>
-            <ul class="list-disc list-inside space-y-2">
-              <li v-for="example in selectedWord.examples" :key="example">{{ example }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Toast Container -->
-    <div class="toast-container">
-      <div v-for="toast in toasts" :key="toast.id" class="toast">
-        {{ toast.message }}
-      </div>
-    </div>
   </div>
 
   <script>
     const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
+    // Sample vocabulary data with improved Chinese explanations
+    const sampleVocabulary = [
+      {
+        id: 1,
+        spanish: '¡Hola!',
+        chinese: '你好！',
+        type: '问候语',
+        explanation: '最基本的西班牙语问候语，可以用于任何时间和场合。',
+        examples: ['¡Hola amigo! (你好，朋友！)', '¡Hola, buenos días! (你好，早上好！)']
+      },
+      {
+        id: 2,
+        spanish: '¿Cómo estás?',
+        chinese: '你好吗？',
+        type: '问候语',
+        explanation: '用于询问对方的状况，是非常常用的寒暄语。非正式场合使用。',
+        examples: ['¿Cómo estás hoy? (你今天好吗？)', '¿Cómo está usted? (您好吗？[正式])']
+      },
+      {
+        id: 3,
+        spanish: 'Gracias',
+        chinese: '谢谢',
+        type: '礼貌用语',
+        explanation: '表示感谢的基本用语，可以单独使用，也可以和其他词组合。',
+        examples: ['Muchas gracias (非常感谢)', 'Gracias por todo (谢谢你的一切)']
+      }
+    ];
+
+    // Sample conversation data with improved explanations
+    const sampleMessages = [
+      {
+        id: 1,
+        role: 'user',
+        content: 'Hola, ¿cómo estás?',
+        translation: '你好，你好吗？',
+        explanation: '这是最常用的西班牙语打招呼方式，结合了问候语和寒暄语。'
+      },
+      {
+        id: 2,
+        role: 'ai',
+        content: '¡Hola! Estoy muy bien, ¿y tú?',
+        translation: '你好！我很好，你呢？',
+        explanation: '回应问候时，我们通常会说"很好"(muy bien)，然后反问对方"你呢？"(¿y tú?)',
+        vocabulary: [
+          {
+            spanish: 'muy bien',
+            chinese: '很好',
+            type: '常用短语'
+          },
+          {
+            spanish: '¿y tú?',
+            chinese: '你呢？',
+            type: '常用表达'
+          }
+        ]
+      },
+      {
+        id: 3,
+        role: 'user',
+        content: 'También estoy bien, gracias.',
+        translation: '我也很好，谢谢。',
+        explanation: '使用"también"(也)来表示相同的状态，是很自然的回应方式。'
+      },
+      {
+        id: 4,
+        role: 'ai',
+        content: '¡Qué bueno! ¿Quieres practicar español?',
+        translation: '太好了！你想练习西班牙语吗？',
+        explanation: '¡Qué bueno! 是表示"太好了"的常用感叹语。注意问句的语调上扬。',
+        vocabulary: [
+          {
+            spanish: '¡Qué bueno!',
+            chinese: '太好了！',
+            type: '感叹语'
+          },
+          {
+            spanish: 'practicar',
+            chinese: '练习',
+            type: '动词'
+          }
+        ]
+      }
+    ];
+
     createApp({
       setup() {
-        const messages = ref([]);
-        const vocabulary = ref([]);
+        const messages = ref(sampleMessages);
+        const vocabulary = ref(sampleVocabulary);
         const userInput = ref('');
         const loading = ref(false);
         const darkMode = ref(false);
         const showVocabulary = ref(false);
-        const selectedWord = ref(null);
         const search = ref('');
-        const toasts = ref([]);
         const chatMessages = ref(null);
 
+        const HF_API_URL = 'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct/v1/chat/completions';
+        const HF_API_KEY = ''; // To be provided by user
+
         const filteredVocabulary = computed(() => {
-          const searchTerm = search.value.toLowerCase();
+          const query = search.value.toLowerCase();
           return vocabulary.value.filter(word => 
-            word.spanish.toLowerCase().includes(searchTerm) ||
-            word.chinese.toLowerCase().includes(searchTerm)
+            word.spanish.toLowerCase().includes(query) ||
+            word.chinese.toLowerCase().includes(query)
           );
         });
-
-        function toggleTheme() {
-          darkMode.value = !darkMode.value;
-          document.documentElement.classList.toggle('dark', darkMode.value);
-        }
-
-        function toggleVocabulary() {
-          showVocabulary.value = !showVocabulary.value;
-        }
-
-        function showWordDetails(word) {
-          selectedWord.value = word;
-        }
-
-        function addToast(message) {
-          const id = Date.now();
-          toasts.value.push({ id, message });
-          setTimeout(() => {
-            toasts.value = toasts.value.filter(t => t.id !== id);
-          }, 3000);
-        }
 
         async function sendMessage() {
           if (!userInput.value.trim() || loading.value) return;
@@ -366,61 +635,80 @@
               id: Date.now(),
               role: 'user',
               content,
-              translation: isChinese ? await translateText(content, 'zh', 'es') : await translateText(content, 'es', 'zh')
+              translation: isChinese ? await translateText(content, 'zh', 'es') : content,
+              explanation: isChinese ? '让我帮你把这句话翻译成西班牙语。' : '让我来解释这句西班牙语的含义。'
             };
 
             messages.value.push(message);
             await nextTick();
             scrollToBottom();
 
-            // Simulate AI response
-            setTimeout(async () => {
-              const aiMessage = {
-                id: Date.now(),
-                role: 'ai',
-                content: isChinese ? '¡Hola! ¿Cómo estás?' : '你好！最近怎么样？',
-                translation: isChinese ? '你好！你好吗？' : 'Hello! How are you?',
-                vocabulary: [
-                  {
-                    id: Date.now(),
-                    spanish: '¿Cómo estás?',
-                    chinese: '你好吗？',
-                    type: '问候语',
-                    examples: [
-                      '¿Cómo estás hoy?',
-                      '¿Cómo está usted?'
-                    ]
-                  }
-                ]
-              };
-
-              messages.value.push(aiMessage);
-              aiMessage.vocabulary.forEach(word => {
-                if (!vocabulary.value.some(v => v.spanish === word.spanish)) {
-                  vocabulary.value.push(word);
-                  addToast(`新词汇已添加：${word.spanish}`);
+            const response = await axios.post(HF_API_URL, {
+              model: "Qwen/Qwen2.5-72B-Instruct",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are a Spanish language teacher for Chinese speakers. 
+                           If the user writes in Chinese, translate to Spanish and explain in Chinese.
+                           If the user writes in Spanish, explain the meaning and grammar in Chinese.
+                           Always provide example sentences and usage notes.`
+                },
+                {
+                  role: "user",
+                  content: message.content
                 }
-              });
+              ],
+              max_tokens: 500
+            }, {
+              headers: {
+                'Authorization': `Bearer ${HF_API_KEY}`,
+                'Content-Type': 'application/json'
+              }
+            });
 
-              await nextTick();
-              scrollToBottom();
-              loading.value = false;
-            }, 1000);
+            const aiResponse = response.data.choices[0].message.content;
+            const aiMessage = {
+              id: Date.now(),
+              role: 'ai',
+              content: isChinese ? await translateText(content, 'zh', 'es') : aiResponse,
+              translation: isChinese ? content : await translateText(aiResponse, 'es', 'zh'),
+              explanation: extractExplanation(aiResponse),
+              vocabulary: extractVocabulary(aiResponse)
+            };
 
+            messages.value.push(aiMessage);
+            await nextTick();
+            scrollToBottom();
           } catch (error) {
-            console.error('Error sending message:', error);
-            addToast('发送消息时出错');
+            console.error('Error:', error);
+            messages.value.push({
+              id: Date.now(),
+              role: 'ai',
+              content: '抱歉，我遇到了一些问题。请稍后再试。',
+              translation: 'Lo siento, he encontrado algunos problemas. Por favor, inténtalo de nuevo más tarde.',
+              explanation: '系统暂时无法处理您的请求。'
+            });
+          } finally {
             loading.value = false;
           }
         }
 
         async function translateText(text, from, to) {
-          // Simulate translation API call
-          return new Promise(resolve => {
-            setTimeout(() => {
-              resolve(from === 'zh' ? '¡Hola! ¿Cómo estás?' : '你好！你好吗？');
-            }, 500);
-          });
+          // Implement your translation logic here
+          // For now, return a mock translation
+          return `[Translation of: ${text}]`;
+        }
+
+        function extractVocabulary(text) {
+          // Implement vocabulary extraction logic here
+          // For now, return sample vocabulary
+          return [sampleVocabulary[Math.floor(Math.random() * sampleVocabulary.length)]];
+        }
+
+        function extractExplanation(text) {
+          // Implement explanation extraction logic here
+          // For now, return a sample explanation
+          return '这是一个语法解释示例。';
         }
 
         function scrollToBottom() {
@@ -429,12 +717,26 @@
           }
         }
 
+        function toggleTheme() {
+          darkMode.value = !darkMode.value;
+          document.body.classList.toggle('dark', darkMode.value);
+        }
+
+        function toggleVocabulary() {
+          showVocabulary.value = !showVocabulary.value;
+        }
+
+        function showWordDetails(word) {
+          // Implement word details display logic
+          console.log('Show details for:', word);
+        }
+
         onMounted(() => {
-          // Check system theme preference
           if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             darkMode.value = true;
-            document.documentElement.classList.add('dark');
+            document.body.classList.add('dark');
           }
+          scrollToBottom();
         });
 
         return {
@@ -444,15 +746,13 @@
           loading,
           darkMode,
           showVocabulary,
-          selectedWord,
           search,
-          toasts,
           chatMessages,
           filteredVocabulary,
+          sendMessage,
           toggleTheme,
           toggleVocabulary,
-          showWordDetails,
-          sendMessage
+          showWordDetails
         };
       }
     }).mount('#app');
