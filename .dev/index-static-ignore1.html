@@ -3,46 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SamitoAI - Spanish to Chinese Learning Assistant">
-  <title>SamitoAI - Learn Spanish with AI</title>
+  <meta name="description" content="SamitoAI - Spanish Learning Assistant">
+  <title>SamitoAI</title>
   
-  <!-- Dependencies -->
+  <!-- Core Dependencies -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* Base Theme Variables */
     :root {
-      --primary-color: #6366F1;
-      --primary-hover: #4F46E5;
-      --secondary-color: #14B8A6;
-      --accent-color: #F59E0B;
-      --background-light: #F9FAFB;
-      --card-light: #FFFFFF;
-      --background-dark: #111827;
-      --card-dark: #1F2937;
-      --text-light: #374151;
-      --text-dark: #F3F4F6;
-      --border-light: #E5E7EB;
-      --border-dark: #374151;
-      --success: #10B981;
-      --error: #EF4444;
-      --warning: #F59E0B;
-      --info: #3B82F6;
-      --radius-sm: 0.375rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-      --transition: all 0.2s ease;
+      --primary: #6366F1;
+      --primary-light: #818CF8;
+      --background: #FFFFFF;
+      --surface: #F9FAFB;
+      --text: #1F2937;
+      --border: #E5E7EB;
+      --radius: 12px;
     }
 
-    /* Modern Reset & Base Styles */
+    .dark {
+      --background: #111827;
+      --surface: #1F2937;
+      --text: #F9FAFB;
+      --border: #374151;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -50,336 +36,190 @@
     }
 
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: var(--background-light);
-      color: var(--text-light);
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--background);
+      color: var(--text);
       line-height: 1.5;
-      transition: var(--transition);
     }
 
-    body.dark {
-      background-color: var(--background-dark);
-      color: var(--text-dark);
-    }
-
-    /* Layout */
     .app-container {
-      max-width: 1440px;
+      max-width: 1200px;
       margin: 0 auto;
       min-height: 100vh;
       display: grid;
       grid-template-rows: auto 1fr;
     }
 
-    /* Header */
-    .app-header {
-      padding: 1rem 1.5rem;
-      background-color: var(--card-light);
-      border-bottom: 1px solid var(--border-light);
-      position: sticky;
-      top: 0;
-      z-index: 50;
+    .header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: var(--shadow-sm);
+      background: var(--surface);
     }
 
-    .dark .app-header {
-      background-color: var(--card-dark);
-      border-bottom-color: var(--border-dark);
-    }
-
-    .app-logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--primary-color);
+    .logo {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary);
     }
 
-    .app-logo i {
-      font-size: 1.75rem;
-    }
-
-    .theme-toggle {
-      padding: 0.5rem;
-      border: none;
-      background: none;
-      color: inherit;
-      cursor: pointer;
-      border-radius: var(--radius-md);
-      transition: var(--transition);
-    }
-
-    .theme-toggle:hover {
-      background-color: var(--background-light);
-    }
-
-    .dark .theme-toggle:hover {
-      background-color: var(--background-dark);
-    }
-
-    /* Main Content */
     .main-content {
       display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 1.5rem;
-      padding: 1.5rem;
+      grid-template-columns: 1fr 300px;
+      gap: 1rem;
+      padding: 1rem;
       height: calc(100vh - 4rem);
     }
 
-    /* Chat Section */
     .chat-section {
-      background: var(--card-light);
-      border-radius: var(--radius-lg);
+      background: var(--surface);
+      border-radius: var(--radius);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: var(--shadow-md);
     }
 
-    .dark .chat-section {
-      background: var(--card-dark);
-    }
-
-    .chat-messages {
+    .messages {
       flex: 1;
       overflow-y: auto;
-      padding: 1.5rem;
-      scroll-behavior: smooth;
+      padding: 1rem;
     }
 
     .message {
       max-width: 85%;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: var(--radius);
       animation: slideIn 0.3s ease-out;
     }
 
     .message.user {
       margin-left: auto;
-      background: var(--primary-color);
+      background: var(--primary);
       color: white;
-      border-radius: var(--radius-lg) var(--radius-lg) 0 var(--radius-lg);
-      padding: 1rem 1.25rem;
     }
 
     .message.ai {
       margin-right: auto;
-      background: var(--background-light);
-      border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 0;
-      padding: 1rem 1.25rem;
-    }
-
-    .dark .message.ai {
-      background: var(--background-dark);
+      background: var(--surface);
+      border: 1px solid var(--border);
     }
 
     .message-content {
-      font-size: 1rem;
-      line-height: 1.5;
       margin-bottom: 0.5rem;
     }
 
-    .message-translation {
+    .translation {
       font-size: 0.9375rem;
-      opacity: 0.9;
       padding-top: 0.5rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid var(--border);
+      color: var(--text);
     }
 
-    .message.ai .message-translation {
-      border-top-color: var(--border-light);
-    }
-
-    .dark .message.ai .message-translation {
-      border-top-color: var(--border-dark);
-    }
-
-    .grammar-notes {
-      margin-top: 0.75rem;
+    .explanation {
+      margin-top: 0.5rem;
       font-size: 0.875rem;
-      color: var(--info);
+      color: var(--primary-light);
     }
 
-    .vocabulary-highlights {
-      margin-top: 0.75rem;
+    .vocabulary-chips {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
+      margin-top: 0.5rem;
     }
 
-    .vocabulary-word {
+    .vocab-chip {
       padding: 0.25rem 0.75rem;
       background: rgba(99, 102, 241, 0.1);
-      border-radius: var(--radius-md);
+      border-radius: 1rem;
       font-size: 0.875rem;
-      color: var(--primary-color);
+      color: var(--primary);
       cursor: pointer;
-      transition: var(--transition);
     }
 
-    .dark .vocabulary-word {
-      background: rgba(99, 102, 241, 0.2);
-    }
-
-    .vocabulary-word:hover {
-      background: rgba(99, 102, 241, 0.2);
-    }
-
-    .message-input {
-      padding: 1rem 1.25rem;
-      background: var(--card-light);
-      border-top: 1px solid var(--border-light);
-    }
-
-    .dark .message-input {
-      background: var(--card-dark);
-      border-top-color: var(--border-dark);
+    .input-section {
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
     }
 
     .input-form {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .input-field {
       flex: 1;
-      padding: 0.75rem 1rem;
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      background: var(--background-light);
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--background);
+      color: var(--text);
       font-size: 1rem;
-      transition: var(--transition);
-    }
-
-    .dark .input-field {
-      background: var(--background-dark);
-      border-color: var(--border-dark);
-      color: var(--text-dark);
-    }
-
-    .input-field:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
 
     .send-button {
       padding: 0.75rem 1.5rem;
-      background: var(--primary-color);
+      background: var(--primary);
       color: white;
       border: none;
-      border-radius: var(--radius-md);
-      font-weight: 500;
+      border-radius: var(--radius);
       cursor: pointer;
-      transition: var(--transition);
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .send-button:hover {
-      background: var(--primary-hover);
-    }
-
     .send-button:disabled {
-      opacity: 0.6;
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
-    /* Vocabulary Section */
     .vocabulary-section {
-      background: var(--card-light);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
+      background: var(--surface);
+      border-radius: var(--radius);
       display: flex;
       flex-direction: column;
-      box-shadow: var(--shadow-md);
-    }
-
-    .dark .vocabulary-section {
-      background: var(--card-dark);
+      overflow: hidden;
     }
 
     .vocabulary-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border-light);
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .dark .vocabulary-header {
-      border-bottom-color: var(--border-dark);
-    }
-
-    .vocabulary-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: inherit;
-    }
-
     .vocabulary-search {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border-light);
-    }
-
-    .dark .vocabulary-search {
-      border-bottom-color: var(--border-dark);
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
     }
 
     .vocabulary-list {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem 1.25rem;
+      padding: 1rem;
     }
 
     .vocabulary-item {
       padding: 1rem;
-      background: var(--background-light);
-      border-radius: var(--radius-md);
-      margin-bottom: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 0.5rem;
       cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .dark .vocabulary-item {
-      background: var(--background-dark);
     }
 
     .vocabulary-item:hover {
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
     }
 
-    .word-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .word-spanish {
-      font-weight: 600;
-      color: var(--primary-color);
-    }
-
-    .word-type {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.5rem;
-      background: rgba(99, 102, 241, 0.1);
-      border-radius: var(--radius-sm);
-      color: var(--primary-color);
-    }
-
-    .word-chinese {
-      font-size: 0.9375rem;
-      color: inherit;
-    }
-
-    /* Animations */
     @keyframes slideIn {
       from {
         opacity: 0;
@@ -391,12 +231,6 @@
       }
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    /* Responsive Design */
     @media (max-width: 768px) {
       .main-content {
         grid-template-columns: 1fr;
@@ -405,108 +239,84 @@
       .vocabulary-section {
         display: none;
       }
-
-      .vocabulary-section.active {
-        display: block;
-        position: fixed;
-        inset: 0;
-        z-index: 100;
-      }
-
-      .message {
-        max-width: 90%;
-      }
-
-      .app-header {
-        padding: 0.75rem 1rem;
-      }
-
-      .main-content {
-        padding: 1rem;
-      }
     }
   </style>
 </head>
-<body :class="{ dark: darkMode }">
+<body>
   <div id="app" class="app-container">
-    <header class="app-header">
-      <div class="app-logo">
-        <i class="mdi mdi-translate"></i>
-        <span>SamitoAI</span>
+    <header class="header">
+      <div class="logo">
+        <span class="mdi mdi-translate"></span>
+        SamitoAI
       </div>
-      <div class="header-actions">
-        <button @click="toggleTheme" class="theme-toggle">
-          <i :class="['mdi', darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night']"></i>
-        </button>
-      </div>
+      <button @click="toggleTheme" class="theme-toggle">
+        <span class="mdi" :class="darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"></span>
+      </button>
     </header>
 
     <main class="main-content">
       <section class="chat-section">
-        <div class="chat-messages" ref="chatMessages">
-          <div v-for="message in messages" :key="message.id" :class="['message', message.role]">
+        <div class="messages" ref="chatMessages">
+          <div v-for="message in messages" 
+               :key="message.id" 
+               :class="['message', message.role]">
             <div class="message-content">{{ message.content }}</div>
-            <div v-if="message.translation" class="message-translation">
-              {{ message.translation }}
-            </div>
-            <div v-if="message.explanation" class="grammar-notes">
-              {{ message.explanation }}
-            </div>
-            <div v-if="message.vocabulary?.length" class="vocabulary-highlights">
-              <span v-for="word in message.vocabulary" 
-                    :key="word.id"
-                    class="vocabulary-word"
-                    @click="showWordDetails(word)">
-                {{ word.spanish }}
-              </span>
-            </div>
+            <template v-if="message.role === 'ai'">
+              <div v-if="message.translation" class="translation">
+                {{ message.translation }}
+              </div>
+              <div v-if="message.explanation" class="explanation">
+                {{ message.explanation }}
+              </div>
+              <div v-if="message.vocabulary?.length" class="vocabulary-chips">
+                <span v-for="word in message.vocabulary" 
+                      :key="word.id"
+                      class="vocab-chip"
+                      @click="addToVocabulary(word)">
+                  {{ word.spanish }}
+                </span>
+              </div>
+            </template>
           </div>
         </div>
 
-        <div class="message-input">
+        <div class="input-section">
           <form @submit.prevent="sendMessage" class="input-form">
-            <input v-model="userInput" 
-                   type="text" 
+            <input v-model="userInput"
+                   type="text"
                    class="input-field"
-                   :placeholder="'输入西班牙语或中文...'"
-                   :disabled="loading"
-                   @keydown.enter.exact="sendMessage"
-                   @keydown.enter.shift.prevent="userInput += '\n'">
-            <button type="submit" 
+                   placeholder="输入西班牙语或中文..."
+                   :disabled="loading">
+            <button type="submit"
                     class="send-button"
                     :disabled="loading || !userInput.trim()">
-              <i class="mdi mdi-send"></i>
-              <span>{{ loading ? '发送中...' : '发送' }}</span>
+              <span class="mdi mdi-send"></span>
+              {{ loading ? '发送中...' : '发送' }}
             </button>
           </form>
         </div>
       </section>
 
-      <section class="vocabulary-section" :class="{ active: showVocabulary }">
+      <section class="vocabulary-section">
         <div class="vocabulary-header">
-          <h2 class="vocabulary-title">生词本</h2>
-          <button @click="toggleVocabulary" class="theme-toggle">
-            <i class="mdi mdi-close"></i>
-          </button>
+          <h2>生词本</h2>
         </div>
 
         <div class="vocabulary-search">
-          <input v-model="search" 
-                 type="search" 
+          <input v-model="search"
+                 type="search"
                  class="input-field"
                  placeholder="搜索生词...">
         </div>
 
         <div class="vocabulary-list">
-          <div v-for="word in filteredVocabulary" 
-               :key="word.id" 
+          <div v-for="word in filteredVocabulary"
+               :key="word.id"
                class="vocabulary-item"
                @click="showWordDetails(word)">
-            <div class="word-header">
-              <span class="word-spanish">{{ word.spanish }}</span>
-              <span class="word-type">{{ word.type }}</span>
-            </div>
+            <div class="word-spanish">{{ word.spanish }}</div>
             <div class="word-chinese">{{ word.chinese }}</div>
+            <div class="word-type">{{ word.type }}</div>
           </div>
         </div>
       </section>
@@ -516,85 +326,49 @@
   <script>
     const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
-    // Sample vocabulary data with improved Chinese explanations
-    const sampleVocabulary = [
+    // Initial vocabulary
+    const initialVocabulary = [
       {
         id: 1,
         spanish: '¡Hola!',
         chinese: '你好！',
         type: '问候语',
-        explanation: '最基本的西班牙语问候语，可以用于任何时间和场合。',
-        examples: ['¡Hola amigo! (你好，朋友！)', '¡Hola, buenos días! (你好，早上好！)']
+        examples: ['¡Hola amigo!', '¡Hola, buenos días!']
       },
       {
         id: 2,
         spanish: '¿Cómo estás?',
         chinese: '你好吗？',
         type: '问候语',
-        explanation: '用于询问对方的状况，是非常常用的寒暄语。非正式场合使用。',
-        examples: ['¿Cómo estás hoy? (你今天好吗？)', '¿Cómo está usted? (您好吗？[正式])']
-      },
-      {
-        id: 3,
-        spanish: 'Gracias',
-        chinese: '谢谢',
-        type: '礼貌用语',
-        explanation: '表示感谢的基本用语，可以单独使用，也可以和其他词组合。',
-        examples: ['Muchas gracias (非常感谢)', 'Gracias por todo (谢谢你的一切)']
+        examples: ['¿Cómo estás hoy?', '¿Cómo está usted?']
       }
     ];
 
-    // Sample conversation data with improved explanations
-    const sampleMessages = [
+    // Initial messages
+    const initialMessages = [
       {
         id: 1,
         role: 'user',
-        content: 'Hola, ¿cómo estás?',
-        translation: '你好，你好吗？',
-        explanation: '这是最常用的西班牙语打招呼方式，结合了问候语和寒暄语。'
+        content: 'Hola, ¿cómo estás?'
       },
       {
         id: 2,
         role: 'ai',
-        content: '¡Hola! Estoy muy bien, ¿y tú?',
-        translation: '你好！我很好，你呢？',
-        explanation: '回应问候时，我们通常会说"很好"(muy bien)，然后反问对方"你呢？"(¿y tú?)',
+        content: '让我来解释这句西班牙语：',
+        translation: '这是最基本的问候语组合：\n1. Hola = 你好\n2. ¿cómo estás? = 你好吗？',
+        explanation: '语法要点：\n- 西班牙语的问句使用倒置问号(¿)开始\n- estás 是 estar 的第二人称单数形式',
         vocabulary: [
           {
-            spanish: 'muy bien',
-            chinese: '很好',
-            type: '常用短语'
+            id: 1,
+            spanish: 'Hola',
+            chinese: '你好',
+            type: '问候语'
           },
           {
-            spanish: '¿y tú?',
-            chinese: '你呢？',
-            type: '常用表达'
-          }
-        ]
-      },
-      {
-        id: 3,
-        role: 'user',
-        content: 'También estoy bien, gracias.',
-        translation: '我也很好，谢谢。',
-        explanation: '使用"también"(也)来表示相同的状态，是很自然的回应方式。'
-      },
-      {
-        id: 4,
-        role: 'ai',
-        content: '¡Qué bueno! ¿Quieres practicar español?',
-        translation: '太好了！你想练习西班牙语吗？',
-        explanation: '¡Qué bueno! 是表示"太好了"的常用感叹语。注意问句的语调上扬。',
-        vocabulary: [
-          {
-            spanish: '¡Qué bueno!',
-            chinese: '太好了！',
-            type: '感叹语'
-          },
-          {
-            spanish: 'practicar',
-            chinese: '练习',
-            type: '动词'
+            id: 2,
+            spanish: '¿cómo estás?',
+            chinese: '你好吗？',
+            type: '问候语'
           }
         ]
       }
@@ -602,12 +376,11 @@
 
     createApp({
       setup() {
-        const messages = ref(sampleMessages);
-        const vocabulary = ref(sampleVocabulary);
+        const messages = ref(initialMessages);
+        const vocabulary = ref(initialVocabulary);
         const userInput = ref('');
         const loading = ref(false);
         const darkMode = ref(false);
-        const showVocabulary = ref(false);
         const search = ref('');
         const chatMessages = ref(null);
 
@@ -618,7 +391,7 @@
           const query = search.value.toLowerCase();
           return vocabulary.value.filter(word => 
             word.spanish.toLowerCase().includes(query) ||
-            word.chinese.toLowerCase().includes(query)
+            word.chinese.includes(query)
           );
         });
 
@@ -630,32 +403,47 @@
           loading.value = true;
 
           try {
-            const isChinese = /[\u4e00-\u9fff]/.test(content);
-            const message = {
+            // Add user message immediately without translation
+            const userMessage = {
               id: Date.now(),
               role: 'user',
-              content,
-              translation: isChinese ? await translateText(content, 'zh', 'es') : content,
-              explanation: isChinese ? '让我帮你把这句话翻译成西班牙语。' : '让我来解释这句西班牙语的含义。'
+              content
             };
-
-            messages.value.push(message);
+            messages.value.push(userMessage);
             await nextTick();
             scrollToBottom();
 
+            // Get AI response
             const response = await axios.post(HF_API_URL, {
               model: "Qwen/Qwen2.5-72B-Instruct",
               messages: [
                 {
                   role: "system",
-                  content: `You are a Spanish language teacher for Chinese speakers. 
-                           If the user writes in Chinese, translate to Spanish and explain in Chinese.
-                           If the user writes in Spanish, explain the meaning and grammar in Chinese.
-                           Always provide example sentences and usage notes.`
+                  content: `你是一位专业的西班牙语老师，擅长教中文母语者学习西班牙语。
+                  
+                  如果用户输入西班牙语：
+                  1. 用中文解释句子含义
+                  2. 分析语法结构
+                  3. 标注重要词汇
+                  4. 提供使用场景和例句
+
+                  如果用户输入中文：
+                  1. 给出地道的西班牙语表达
+                  2. 解释为什么这样翻译
+                  3. 说明语法要点
+                  4. 提供类似用法
+
+                  回复格式：
+                  ---翻译---
+                  [中文翻译或解释]
+                  ---语法---
+                  [语法要点]
+                  ---词汇---
+                  [重要词汇解释]`
                 },
                 {
                   role: "user",
-                  content: message.content
+                  content
                 }
               ],
               max_tokens: 500
@@ -667,16 +455,43 @@
             });
 
             const aiResponse = response.data.choices[0].message.content;
+            
+            // Parse AI response
+            const sections = aiResponse.split('---');
+            const translation = sections[1]?.replace('翻译', '').trim();
+            const grammar = sections[2]?.replace('语法', '').trim();
+            const vocab = sections[3]?.replace('词汇', '').trim();
+
+            // Extract vocabulary items
+            const vocabItems = vocab.split('\n').map(line => {
+              const [spanish, chinese] = line.split('=').map(s => s.trim());
+              return {
+                id: Date.now() + Math.random(),
+                spanish,
+                chinese,
+                type: '生词'
+              };
+            });
+
+            // Add AI response
             const aiMessage = {
               id: Date.now(),
               role: 'ai',
-              content: isChinese ? await translateText(content, 'zh', 'es') : aiResponse,
-              translation: isChinese ? content : await translateText(aiResponse, 'es', 'zh'),
-              explanation: extractExplanation(aiResponse),
-              vocabulary: extractVocabulary(aiResponse)
+              content: translation,
+              translation: grammar,
+              explanation: vocab,
+              vocabulary: vocabItems
             };
 
             messages.value.push(aiMessage);
+
+            // Add new vocabulary items
+            vocabItems.forEach(item => {
+              if (!vocabulary.value.some(v => v.spanish === item.spanish)) {
+                vocabulary.value.push(item);
+              }
+            });
+
             await nextTick();
             scrollToBottom();
           } catch (error) {
@@ -684,31 +499,12 @@
             messages.value.push({
               id: Date.now(),
               role: 'ai',
-              content: '抱歉，我遇到了一些问题。请稍后再试。',
-              translation: 'Lo siento, he encontrado algunos problemas. Por favor, inténtalo de nuevo más tarde.',
-              explanation: '系统暂时无法处理您的请求。'
+              content: '抱歉，我遇到了问题',
+              translation: '请稍后再试'
             });
           } finally {
             loading.value = false;
           }
-        }
-
-        async function translateText(text, from, to) {
-          // Implement your translation logic here
-          // For now, return a mock translation
-          return `[Translation of: ${text}]`;
-        }
-
-        function extractVocabulary(text) {
-          // Implement vocabulary extraction logic here
-          // For now, return sample vocabulary
-          return [sampleVocabulary[Math.floor(Math.random() * sampleVocabulary.length)]];
-        }
-
-        function extractExplanation(text) {
-          // Implement explanation extraction logic here
-          // For now, return a sample explanation
-          return '这是一个语法解释示例。';
         }
 
         function scrollToBottom() {
@@ -717,18 +513,20 @@
           }
         }
 
-        function toggleTheme() {
-          darkMode.value = !darkMode.value;
-          document.body.classList.toggle('dark', darkMode.value);
-        }
-
-        function toggleVocabulary() {
-          showVocabulary.value = !showVocabulary.value;
+        function addToVocabulary(word) {
+          if (!vocabulary.value.some(v => v.spanish === word.spanish)) {
+            vocabulary.value.push(word);
+          }
         }
 
         function showWordDetails(word) {
-          // Implement word details display logic
+          // Implement word details display
           console.log('Show details for:', word);
+        }
+
+        function toggleTheme() {
+          darkMode.value = !darkMode.value;
+          document.body.classList.toggle('dark', darkMode.value);
         }
 
         onMounted(() => {
@@ -745,13 +543,12 @@
           userInput,
           loading,
           darkMode,
-          showVocabulary,
           search,
           chatMessages,
           filteredVocabulary,
           sendMessage,
           toggleTheme,
-          toggleVocabulary,
+          addToVocabulary,
           showWordDetails
         };
       }
