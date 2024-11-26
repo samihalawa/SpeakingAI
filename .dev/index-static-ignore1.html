@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SamitoAI - Spanish Learning Assistant">
   <title>SamitoAI</title>
   
   <!-- Core Dependencies -->
@@ -57,6 +56,40 @@
       justify-content: space-between;
       align-items: center;
       background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-button:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .nav-button.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
     }
 
     .logo {
@@ -74,6 +107,7 @@
       gap: 1rem;
       padding: 1rem;
       height: calc(100vh - 4rem);
+      position: relative;
     }
 
     .chat-section {
@@ -141,6 +175,12 @@
       font-size: 0.875rem;
       color: var(--primary);
       cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .vocab-chip:hover {
+      background: var(--primary);
+      color: white;
     }
 
     .input-section {
@@ -174,6 +214,11 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .send-button:hover:not(:disabled) {
+      background: var(--primary-light);
     }
 
     .send-button:disabled {
@@ -187,6 +232,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: transform 0.3s ease;
     }
 
     .vocabulary-header {
@@ -214,10 +260,63 @@
       border-radius: var(--radius);
       margin-bottom: 0.5rem;
       cursor: pointer;
+      transition: all 0.2s;
     }
 
     .vocabulary-item:hover {
       border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .word-spanish {
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .word-chinese {
+      margin-bottom: 0.25rem;
+    }
+
+    .word-type {
+      font-size: 0.875rem;
+      color: var(--primary-light);
+    }
+
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0.5rem;
+      z-index: 100;
+    }
+
+    .mobile-nav-buttons {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .mobile-nav-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.5rem;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.75rem;
+    }
+
+    .mobile-nav-button.active {
+      color: var(--primary);
+    }
+
+    .mobile-nav-button i {
+      font-size: 1.5rem;
     }
 
     @keyframes slideIn {
@@ -234,11 +333,52 @@
     @media (max-width: 768px) {
       .main-content {
         grid-template-columns: 1fr;
+        padding-bottom: 4rem;
       }
 
       .vocabulary-section {
         display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 200;
       }
+
+      .vocabulary-section.active {
+        display: flex;
+      }
+
+      .mobile-nav {
+        display: block;
+      }
+
+      .nav-controls {
+        display: none;
+      }
+    }
+
+    .keyboard-shortcuts {
+      position: fixed;
+      bottom: 1rem;
+      left: 1rem;
+      background: var(--surface);
+      padding: 0.5rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      font-size: 0.875rem;
+      display: none;
+    }
+
+    .keyboard-shortcuts.visible {
+      display: block;
+    }
+
+    .shortcut-key {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      background: var(--background);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin: 0 0.25rem;
     }
   </style>
 </head>
@@ -249,13 +389,33 @@
         <span class="mdi mdi-translate"></span>
         SamitoAI
       </div>
-      <button @click="toggleTheme" class="theme-toggle">
-        <span class="mdi" :class="darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"></span>
-      </button>
+      <div class="nav-controls">
+        <button class="nav-button" 
+                :class="{ active: !showVocabulary }"
+                @click="setView('chat')"
+                title="聊天界面 (Ctrl + 1)">
+          <span class="mdi mdi-chat"></span>
+          聊天
+        </button>
+        <button class="nav-button"
+                :class="{ active: showVocabulary }"
+                @click="setView('vocabulary')"
+                title="生词本 (Ctrl + 2)">
+          <span class="mdi mdi-book"></span>
+          生词本
+          <span class="vocab-count" v-if="vocabulary.length">{{ vocabulary.length }}</span>
+        </button>
+        <button class="nav-button"
+                @click="toggleTheme"
+                :title="darkMode ? '切换到亮色模式 (Ctrl + D)' : '切换到暗色模式 (Ctrl + D)'">
+          <span class="mdi" :class="darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"></span>
+          {{ darkMode ? '亮色' : '暗色' }}
+        </button>
+      </div>
     </header>
 
     <main class="main-content">
-      <section class="chat-section">
+      <section class="chat-section" v-show="!showVocabulary || !isMobile">
         <div class="messages" ref="chatMessages">
           <div v-for="message in messages" 
                :key="message.id" 
@@ -272,7 +432,8 @@
                 <span v-for="word in message.vocabulary" 
                       :key="word.id"
                       class="vocab-chip"
-                      @click="addToVocabulary(word)">
+                      @click="addToVocabulary(word)"
+                      :title="'点击添加到生词本'">
                   {{ word.spanish }}
                 </span>
               </div>
@@ -286,10 +447,13 @@
                    type="text"
                    class="input-field"
                    placeholder="输入西班牙语或中文..."
-                   :disabled="loading">
+                   :disabled="loading"
+                   ref="inputField"
+                   @keydown.ctrl.enter="sendMessage">
             <button type="submit"
                     class="send-button"
-                    :disabled="loading || !userInput.trim()">
+                    :disabled="loading || !userInput.trim()"
+                    :title="'发送消息 (Ctrl + Enter)'">
               <span class="mdi mdi-send"></span>
               {{ loading ? '发送中...' : '发送' }}
             </button>
@@ -297,16 +461,22 @@
         </div>
       </section>
 
-      <section class="vocabulary-section">
+      <section class="vocabulary-section" :class="{ active: showVocabulary || !isMobile }">
         <div class="vocabulary-header">
-          <h2>生词本</h2>
+          <h2>生词本 ({{ vocabulary.length }})</h2>
+          <button class="nav-button" 
+                  @click="setView('chat')" 
+                  v-if="isMobile">
+            <span class="mdi mdi-close"></span>
+          </button>
         </div>
 
         <div class="vocabulary-search">
           <input v-model="search"
                  type="search"
                  class="input-field"
-                 placeholder="搜索生词...">
+                 placeholder="搜索生词..."
+                 ref="searchField">
         </div>
 
         <div class="vocabulary-list">
@@ -321,80 +491,181 @@
         </div>
       </section>
     </main>
+
+    <nav class="mobile-nav">
+      <div class="mobile-nav-buttons">
+        <a class="mobile-nav-button" 
+           :class="{ active: !showVocabulary }"
+           @click="setView('chat')">
+          <span class="mdi mdi-chat"></span>
+          聊天
+        </a>
+        <a class="mobile-nav-button"
+           :class="{ active: showVocabulary }"
+           @click="setView('vocabulary')">
+          <span class="mdi mdi-book"></span>
+          生词本
+        </a>
+        <a class="mobile-nav-button"
+           @click="toggleTheme">
+          <span class="mdi" :class="darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"></span>
+          {{ darkMode ? '亮色' : '暗色' }}
+        </a>
+      </div>
+    </nav>
+
+    <div class="keyboard-shortcuts" :class="{ visible: showKeyboardShortcuts }">
+      <div><span class="shortcut-key">Ctrl + 1</span> 切换到聊天界面</div>
+      <div><span class="shortcut-key">Ctrl + 2</span> 切换到生词本</div>
+      <div><span class="shortcut-key">Ctrl + D</span> 切换暗色模式</div>
+      <div><span class="shortcut-key">Ctrl + Enter</span> 发送消息</div>
+      <div><span class="shortcut-key">Ctrl + /</span> 显示/隐藏快捷键</div>
+    </div>
   </div>
 
   <script>
     const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
-    // Initial vocabulary
-    const initialVocabulary = [
-      {
-        id: 1,
-        spanish: '¡Hola!',
-        chinese: '你好！',
-        type: '问候语',
-        examples: ['¡Hola amigo!', '¡Hola, buenos días!']
-      },
-      {
-        id: 2,
-        spanish: '¿Cómo estás?',
-        chinese: '你好吗？',
-        type: '问候语',
-        examples: ['¿Cómo estás hoy?', '¿Cómo está usted?']
-      }
-    ];
+    // Database configuration
+    const DB_URL = 'postgresql://neondb_owner:derbGji8KWI2@ep-holy-glitter-a59iygke.us-east-2.aws.neon.tech/kittyspanish2?sslmode=require';
+    const API_BASE_URL = '/api'; // Your API endpoint
 
-    // Initial messages
-    const initialMessages = [
-      {
-        id: 1,
-        role: 'user',
-        content: 'Hola, ¿cómo estás?'
+    // API functions
+    const api = {
+      async getMessages() {
+        const response = await axios.get(`${API_BASE_URL}/messages`);
+        return response.data;
       },
-      {
-        id: 2,
-        role: 'ai',
-        content: '让我来解释这句西班牙语：',
-        translation: '这是最基本的问候语组合：\n1. Hola = 你好\n2. ¿cómo estás? = 你好吗？',
-        explanation: '语法要点：\n- 西班牙语的问句使用倒置问号(¿)开始\n- estás 是 estar 的第二人称单数形式',
-        vocabulary: [
-          {
-            id: 1,
-            spanish: 'Hola',
-            chinese: '你好',
-            type: '问候语'
-          },
-          {
-            id: 2,
-            spanish: '¿cómo estás?',
-            chinese: '你好吗？',
-            type: '问候语'
-          }
-        ]
+
+      async saveMessage(message) {
+        const response = await axios.post(`${API_BASE_URL}/messages`, message);
+        return response.data;
+      },
+
+      async getVocabulary() {
+        const response = await axios.get(`${API_BASE_URL}/vocabulary`);
+        return response.data;
+      },
+
+      async saveVocabularyItem(item) {
+        const response = await axios.post(`${API_BASE_URL}/vocabulary`, item);
+        return response.data;
+      },
+
+      async updateVocabularyItem(id, item) {
+        const response = await axios.put(`${API_BASE_URL}/vocabulary/${id}`, item);
+        return response.data;
       }
-    ];
+    };
 
     createApp({
       setup() {
-        const messages = ref(initialMessages);
-        const vocabulary = ref(initialVocabulary);
+        const messages = ref([]);
+        const vocabulary = ref([]);
         const userInput = ref('');
         const loading = ref(false);
         const darkMode = ref(false);
+        const showVocabulary = ref(false);
         const search = ref('');
         const chatMessages = ref(null);
+        const inputField = ref(null);
+        const searchField = ref(null);
+        const showKeyboardShortcuts = ref(false);
+        const isMobile = ref(window.innerWidth <= 768);
+        const initialized = ref(false);
 
-        const HF_API_URL = 'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct/v1/chat/completions';
-        const HF_API_KEY = ''; // To be provided by user
+        // Load data from database
+        async function initializeData() {
+          try {
+            loading.value = true;
+            const [messagesData, vocabularyData] = await Promise.all([
+              api.getMessages(),
+              api.getVocabulary()
+            ]);
+            messages.value = messagesData;
+            vocabulary.value = vocabularyData;
+            initialized.value = true;
+          } catch (error) {
+            console.error('Error loading data:', error);
+            // Handle offline mode
+            messages.value = JSON.parse(localStorage.getItem('messages') || '[]');
+            vocabulary.value = JSON.parse(localStorage.getItem('vocabulary') || '[]');
+          } finally {
+            loading.value = false;
+          }
+        }
 
-        const filteredVocabulary = computed(() => {
-          const query = search.value.toLowerCase();
-          return vocabulary.value.filter(word => 
-            word.spanish.toLowerCase().includes(query) ||
-            word.chinese.includes(query)
-          );
-        });
+        // Save message to database
+        async function saveMessage(message) {
+          try {
+            const savedMessage = await api.saveMessage({
+              content: message.content,
+              role: message.role,
+              translation: message.translation,
+              explanation: message.explanation
+            });
+            return savedMessage;
+          } catch (error) {
+            console.error('Error saving message:', error);
+            // Store in localStorage for offline mode
+            const offlineMessages = JSON.parse(localStorage.getItem('offlineMessages') || '[]');
+            offlineMessages.push(message);
+            localStorage.setItem('offlineMessages', JSON.stringify(offlineMessages));
+            return message;
+          }
+        }
 
+        // Save vocabulary item to database
+        async function saveVocabularyItem(item) {
+          try {
+            const savedItem = await api.saveVocabularyItem({
+              spanish: item.spanish,
+              chinese: item.chinese,
+              wordType: item.type,
+              example: item.example,
+              notes: item.notes,
+              difficulty: 'beginner',
+              tags: [],
+              theme: null
+            });
+            return savedItem;
+          } catch (error) {
+            console.error('Error saving vocabulary item:', error);
+            // Store in localStorage for offline mode
+            const offlineVocabulary = JSON.parse(localStorage.getItem('offlineVocabulary') || '[]');
+            offlineVocabulary.push(item);
+            localStorage.setItem('offlineVocabulary', JSON.stringify(offlineVocabulary));
+            return item;
+          }
+        }
+
+        // Sync offline data when connection is restored
+        async function syncOfflineData() {
+          if (!navigator.onLine) return;
+
+          try {
+            // Sync messages
+            const offlineMessages = JSON.parse(localStorage.getItem('offlineMessages') || '[]');
+            for (const message of offlineMessages) {
+              await saveMessage(message);
+            }
+            localStorage.setItem('offlineMessages', '[]');
+
+            // Sync vocabulary
+            const offlineVocabulary = JSON.parse(localStorage.getItem('offlineVocabulary') || '[]');
+            for (const item of offlineVocabulary) {
+              await saveVocabularyItem(item);
+            }
+            localStorage.setItem('offlineVocabulary', '[]');
+
+            // Reload data
+            await initializeData();
+          } catch (error) {
+            console.error('Error syncing offline data:', error);
+          }
+        }
+
+        // Modified sendMessage function
         async function sendMessage() {
           if (!userInput.value.trim() || loading.value) return;
 
@@ -403,13 +674,14 @@
           loading.value = true;
 
           try {
-            // Add user message immediately without translation
+            // Save user message
             const userMessage = {
               id: Date.now(),
               role: 'user',
               content
             };
             messages.value.push(userMessage);
+            await saveMessage(userMessage);
             await nextTick();
             scrollToBottom();
 
@@ -473,7 +745,7 @@
               };
             });
 
-            // Add AI response
+            // Save AI message
             const aiMessage = {
               id: Date.now(),
               role: 'ai',
@@ -482,15 +754,16 @@
               explanation: vocab,
               vocabulary: vocabItems
             };
-
             messages.value.push(aiMessage);
+            await saveMessage(aiMessage);
 
-            // Add new vocabulary items
-            vocabItems.forEach(item => {
+            // Save vocabulary items
+            for (const item of vocabItems) {
               if (!vocabulary.value.some(v => v.spanish === item.spanish)) {
-                vocabulary.value.push(item);
+                const savedItem = await saveVocabularyItem(item);
+                vocabulary.value.push(savedItem);
               }
-            });
+            }
 
             await nextTick();
             scrollToBottom();
@@ -507,33 +780,33 @@
           }
         }
 
-        function scrollToBottom() {
-          if (chatMessages.value) {
-            chatMessages.value.scrollTop = chatMessages.value.scrollHeight;
-          }
-        }
+        // Event listeners for online/offline status
+        window.addEventListener('online', () => {
+          syncOfflineData();
+        });
 
-        function addToVocabulary(word) {
-          if (!vocabulary.value.some(v => v.spanish === word.spanish)) {
-            vocabulary.value.push(word);
-          }
-        }
+        onMounted(async () => {
+          // Initialize data
+          await initializeData();
 
-        function showWordDetails(word) {
-          // Implement word details display
-          console.log('Show details for:', word);
-        }
-
-        function toggleTheme() {
-          darkMode.value = !darkMode.value;
-          document.body.classList.toggle('dark', darkMode.value);
-        }
-
-        onMounted(() => {
+          // Theme preference
           if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             darkMode.value = true;
             document.body.classList.add('dark');
           }
+          
+          // Event listeners
+          window.addEventListener('keydown', handleKeyboard);
+          window.addEventListener('resize', handleResize);
+          
+          // Show keyboard shortcuts hint
+          setTimeout(() => {
+            showKeyboardShortcuts.value = true;
+            setTimeout(() => {
+              showKeyboardShortcuts.value = false;
+            }, 5000);
+          }, 2000);
+          
           scrollToBottom();
         });
 
@@ -543,13 +816,20 @@
           userInput,
           loading,
           darkMode,
+          showVocabulary,
           search,
           chatMessages,
+          inputField,
+          searchField,
+          showKeyboardShortcuts,
+          isMobile,
+          initialized,
           filteredVocabulary,
           sendMessage,
           toggleTheme,
-          addToVocabulary,
-          showWordDetails
+          addToVocabulary: saveVocabularyItem,
+          showWordDetails,
+          setView
         };
       }
     }).mount('#app');
